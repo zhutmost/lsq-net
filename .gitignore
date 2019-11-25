@@ -1,0 +1,55 @@
+# ==============================================================================
+#                               Editors & IDEs
+
+# gedit: backup files
+*~
+
+# VIM: swap files
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+
+# VIM: session
+Session.vim
+
+# VIM: netrw.vim: Network oriented reading, writing, browsing (eg: ftp scp)
+.netrwhist
+
+# Intellij IDEA
+.idea/
+
+# ==============================================================================
+#                               Language & EDA Tools
+
+# Python
+.py[cod]
+__pycache__/
+
+# ==============================================================================
+#                               Operationg Systems
+
+# Folder view configuration files
+*.DS_store
+*.DS_store?
+Desktop.ini
+
+# Thumbnail cache files
+._*
+Thumbs.db
+
+# Files that might appear on external disks
+.Spotlight-V100
+.Trashes
+
+# NFS Temp Files
+.nfs*
+
+# ==============================================================================
+#                                 This Project
+
+# Working directory
+out/
+
+# SVN
+.svn/
+
+*.log
