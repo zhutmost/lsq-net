@@ -1,11 +1,10 @@
 import torch as t
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
+
 from quan import QuanConv2d
 
-
 __all__ = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152']
-
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',

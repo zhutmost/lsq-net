@@ -1,5 +1,7 @@
-import torch as t
 import logging
+
+import torch as t
+
 from .resnet import *
 
 
@@ -21,7 +23,7 @@ def create_model(args):
         logger.error('Model architecture is not supported')
         exit(-1)
 
-    logger.info('Initialized %s model for %s dataset' % (args.arch, args.dataset))
+    logger.info('Created `%s` model for `%s` dataset' % (args.arch, args.dataset))
 
     if args.gpu and not args.load_serialized:
         model = t.nn.DataParallel(model, device_ids=args.gpu)

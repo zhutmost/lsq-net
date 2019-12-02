@@ -1,10 +1,12 @@
-import torch as t
 import logging
-import time
-from collections import OrderedDict
 import math
 import operator
+import time
+from collections import OrderedDict
 
+import torch as t
+
+__all__ = ['train', 'validate', 'PerformanceScoreboard']
 
 logger = logging.getLogger()
 
@@ -23,7 +25,23 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monitors, args):
+def accuracy(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append(correct_k.mul_(100.0 / batch_size))
+    return res
+
+
+def train(train_loader, model, criterion, optimizer, epoch, monitors, args):
     losses = AverageMeter()
     batch_time = AverageMeter()
     top1 = AverageMeter()
@@ -51,8 +69,6 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if lr_scheduler is not None:
-            lr_scheduler.step(epoch)
 
         batch_time.update(time.time() - end_time)
         end_time = time.time()
@@ -63,29 +79,13 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
             status_dict['Top1'] = top1.avg
             status_dict['Top5'] = top5.avg
             status_dict['Time'] = batch_time.avg
-            status = ('Performance/Training/', status_dict)
+            status = ('Training/', status_dict)
             for m in monitors:
-                m.log_training_progress(status, epoch, (batch_idx + 1), steps_per_epoch, args.print_freq)
+                m.log_training_progress(status, epoch, (batch_idx + 1), steps_per_epoch)
 
-    logger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f    LearningRate: %.6f\n',
-                top1.avg, top5.avg, losses.avg, lr_scheduler.get_lr()[0])
+    logger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f\n',
+                top1.avg, top5.avg, losses.avg)
     return top1.avg, top5.avg, losses.avg
-
-
-def accuracy(output, target, topk=(1,)):
-    """Computes the precision@k for the specified values of k"""
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-    res = []
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
-        res.append(correct_k.mul_(100.0 / batch_size))
-    return res
 
 
 def validate(data_loader, model, criterion, epoch, monitors, args):
@@ -123,9 +123,9 @@ def validate(data_loader, model, criterion, epoch, monitors, args):
                 status_dict['Top1'] = top1.avg
                 status_dict['Top5'] = top5.avg
                 status_dict['Time'] = batch_time.avg
-                status = ('Performance/Validation/', status_dict)
+                status = ('Evaluation/', status_dict)
                 for m in monitors:
-                    m.log_training_progress(status, epoch, (batch_idx + 1), total_step, args.print_freq)
+                    m.log_training_progress(status, epoch, (batch_idx + 1), total_step)
 
     logger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f\n', top1.avg, top5.avg, losses.avg)
     return top1.avg, top5.avg, losses.avg
@@ -146,13 +146,21 @@ class MutableNamedTuple(dict):
             self[key] = val
 
 
-def update_training_scoreboard(perf_scoreboard, model, top1, top5, epoch, num_best_scores):
-    """ Update the list of top training scores achieved so far, and log the best scores so far"""
+class PerformanceScoreboard:
+    def __init__(self, num_best_scores):
+        self.board = list()
+        self.num_best_scores = num_best_scores
 
-    perf_scoreboard.append(MutableNamedTuple({'top1': top1, 'top5': top5, 'epoch': epoch}))
-    # Keep perf_scores_history sorted from best to worst
-    # Sort by top1, top5 and epoch
-    perf_scoreboard.sort(key=operator.attrgetter('top1', 'top5', 'epoch'), reverse=True)
-    for score in perf_scoreboard[:num_best_scores]:
-        logger.info('==> Best @ Epoch [%d][Top1: %.3f   Top5: %.3f]',
-                    score.epoch, score.top1, score.top5)
+    def update(self, top1, top5, epoch):
+        """ Update the list of top training scores achieved so far, and log the best scores so far"""
+        self.board.append(MutableNamedTuple({'top1': top1, 'top5': top5, 'epoch': epoch}))
+        # Keep perf_scores_history sorted from best to worst
+        # Sort by top1, top5 and epoch
+        self.board.sort(key=operator.attrgetter('top1', 'top5', 'epoch'), reverse=True)
+        for idx in range(self.num_best_scores):
+            score = self.board[idx]
+            logger.info('Scoreboard best %d ==> Epoch [%d][Top1: %.3f   Top5: %.3f]',
+                        idx + 1, score.epoch, score.top1, score.top5)
+
+    def is_best(self, epoch):
+        return self.board[0].epoch == epoch

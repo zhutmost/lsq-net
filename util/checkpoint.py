@@ -1,6 +1,7 @@
-import torch as t
 import logging
 import os
+
+import torch as t
 
 
 def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, output_dir='.'):
@@ -37,11 +38,13 @@ def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, ou
         'extras': extras,
     }
 
-    logger.info('Saving checkpoint to %s', filepath)
+    msg = 'Saving checkpoint to:\n'
+    msg += '             Current: %s\n' % filepath
     t.save(checkpoint, filepath)
     if is_best:
-        logger.info('Saving checkpoint to %s\n', filepath_best)
+        msg += '                Best: %s\n' % filepath_best
         t.save(checkpoint, filepath_best)
+    logger.info(msg)
 
 
 def load_checkpoint(model, chkp_file, model_device=None, strict=False):
@@ -78,7 +81,7 @@ def load_checkpoint(model, chkp_file, model_device=None, strict=False):
         # This is pyTorch 1.1+
         missing_keys, unexpected_keys = anomalous_keys
         if unexpected_keys:
-            logger.warning("Warning: the loaded checkpoint (%s) contains %d unexpected state keys" %
+            logger.warning("The loaded checkpoint (%s) contains %d unexpected state keys" %
                            (chkp_file, len(unexpected_keys)))
         if missing_keys:
             raise ValueError("The loaded checkpoint (%s) is missing %d state keys" %

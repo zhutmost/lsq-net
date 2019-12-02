@@ -1,6 +1,8 @@
-import torch as t
-import torchvision as tv
 import os
+
+import torch as t
+import torch.utils.data
+import torchvision as tv
 
 
 def load_data(dataset, data_dir, batch_size, workers):

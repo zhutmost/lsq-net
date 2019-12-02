@@ -1,11 +1,11 @@
-from pathlib import Path
-import torch as t
-import torchvision as tv
 import logging
+from pathlib import Path
 
+import torch as t
+
+import process
 import util
 from model import create_model
-import process
 
 
 def main():
@@ -18,7 +18,10 @@ def main():
 
     log_dir = util.init_logger(args.name, output_dir, 'logging.conf')
     logger = logging.getLogger()
+
     pymonitor = util.PythonMonitor(logger)
+    tbmonitor = util.TensorBoardMonitor(log_dir, logger)
+    monitors = [pymonitor, tbmonitor]
 
     if args.cpu or not t.cuda.is_available() or args.gpu == '':
         args.device = 'cpu'
@@ -47,20 +50,12 @@ def main():
 
     # Create the model
     model = create_model(args)
-    # model = tv.models.resnet18(pretrained=args.pretrained).to(args.device)
 
     start_epoch = 0
-    perf_scoreboard = []
+    perf_scoreboard = process.PerformanceScoreboard(args.num_best_scores)
 
     if args.resume:
         model, start_epoch, _ = util.load_checkpoint(model, args.resume, args.device)
-
-    # Define loss function (criterion) and optimizer
-    criterion = t.nn.CrossEntropyLoss().to(args.device)
-
-    optimizer = t.optim.SGD([{'params': model.parameters(), 'initial_lr': args.lr}],
-                            lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
-    lr_scheduler = t.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, last_epoch=start_epoch - 1)
 
     # Initialize data loader
     train_loader, val_loader = util.load_data(args.dataset, args.dataset_dir,
@@ -69,23 +64,40 @@ def main():
     logger.info('Dataset sizes:\n'
                 '          training = %d\n'
                 '        validation = %d\n'
-                '              test = %d', len(train_loader.sampler), len(val_loader.sampler), len(test_loader.sampler))
+                '              test = %d', len(train_loader), len(val_loader), len(test_loader))
+
+    # Define loss function (criterion) and optimizer
+    criterion = t.nn.CrossEntropyLoss().to(args.device)
+
+    optimizer = t.optim.Adam(model.parameters(), lr=args.lr)
+    lr_scheduler = t.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.8)
+    # optimizer = t.optim.SGD([{'params': model.parameters(), 'initial_lr': args.lr}],
+    #                         lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+    # lr_scheduler = t.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, last_epoch=start_epoch - 1)
+    logger.info(('Optimizer: %s' % optimizer).replace('\n', '\n' + ' ' * 11))
+    logger.info(('LR scheduler: %s\n' % lr_scheduler).replace('\n', '\n' + ' ' * 11))
 
     if args.eval:
-        process.validate(test_loader, model, criterion, -1, [pymonitor], args)
+        process.validate(test_loader, model, criterion, -1, monitors, args)
     else:  # training
         if args.resume or args.pretrained:
-            top1, top5, vloss = process.validate(test_loader, model, criterion,
-                                                 start_epoch - 1, [pymonitor], args)
-            process.update_training_scoreboard(perf_scoreboard, model, top1, top5,
-                                               start_epoch - 1, args.num_best_scores)
+            logger.info('>>>>>>>> Epoch -1 (pre-trained model evaluation)')
+            top1, top5, _ = process.validate(test_loader, model, criterion,
+                                             start_epoch - 1, monitors, args)
+            perf_scoreboard.update(top1, top5, start_epoch - 1)
         for epoch in range(start_epoch, args.epochs):
-            process.train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, [pymonitor], args)
+            logger.info('>>>>>>>> Epoch %3d' % epoch)
+            process.train(train_loader, model, criterion, optimizer, epoch, monitors, args)
 
-            top1, top5, vloss = process.validate(test_loader, model, criterion, -1, [pymonitor], args)
-            process.update_training_scoreboard(perf_scoreboard, model, top1, top5, epoch, args.num_best_scores)
-            is_best = perf_scoreboard[0].epoch == epoch
+            top1, top5, _ = process.validate(test_loader, model, criterion, epoch, monitors, args)
 
+            if lr_scheduler is not None:
+                old_lr = lr_scheduler.get_lr()[0]
+                lr_scheduler.step(epoch)
+                logger.info('Learning rate updates from %.9f to %.9f' % (old_lr, lr_scheduler.get_lr()[0]))
+
+            perf_scoreboard.update(top1, top5, epoch)
+            is_best = perf_scoreboard.is_best(epoch)
             util.save_checkpoint(epoch, args.arch, model, {'top1': top1}, is_best, args.name, log_dir)
 
 
