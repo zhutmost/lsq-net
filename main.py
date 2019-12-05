@@ -19,8 +19,8 @@ def main():
     log_dir = util.init_logger(args.name, output_dir, 'logging.conf')
     logger = logging.getLogger()
 
-    pymonitor = util.PythonMonitor(logger)
-    tbmonitor = util.TensorBoardMonitor(log_dir, logger)
+    pymonitor = util.ProgressMonitor(logger)
+    tbmonitor = util.TensorBoardMonitor(logger, log_dir)
     monitors = [pymonitor, tbmonitor]
 
     if args.cpu or not t.cuda.is_available() or args.gpu == '':
@@ -41,8 +41,10 @@ def main():
                 exit(1)
         # Set default device in case the first one on the list != 0
         t.cuda.set_device(args.gpu[0])
-        # Enable the cudnn built-in auto-tuner to accelerating training
-        t.backends.cudnn.benchmark = True
+        # Enable the cudnn built-in auto-tuner to accelerating training, but it
+        # will introduce some fluctuations in a narrow range.
+        t.backends.cudnn.benchmark = False
+        t.backends.cudnn.deterministic = True
 
     # Currently only ImageNet dataset is supported
     args.dataset = 'imagenet'
@@ -70,7 +72,7 @@ def main():
     criterion = t.nn.CrossEntropyLoss().to(args.device)
 
     optimizer = t.optim.Adam(model.parameters(), lr=args.lr)
-    lr_scheduler = t.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.8)
+    lr_scheduler = t.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.4, patience=5, verbose=True)
     # optimizer = t.optim.SGD([{'params': model.parameters(), 'initial_lr': args.lr}],
     #                         lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     # lr_scheduler = t.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, last_epoch=start_epoch - 1)
@@ -89,12 +91,13 @@ def main():
             logger.info('>>>>>>>> Epoch %3d' % epoch)
             process.train(train_loader, model, criterion, optimizer, epoch, monitors, args)
 
-            top1, top5, _ = process.validate(test_loader, model, criterion, epoch, monitors, args)
+            top1, top5, val_loss = process.validate(test_loader, model, criterion, epoch, monitors, args)
 
             if lr_scheduler is not None:
-                old_lr = lr_scheduler.get_lr()[0]
-                lr_scheduler.step(epoch)
-                logger.info('Learning rate updates from %.9f to %.9f' % (old_lr, lr_scheduler.get_lr()[0]))
+                old_lr = optimizer.param_groups[0]['lr']
+                lr_scheduler.step(val_loss, epoch)
+                new_lr = optimizer.param_groups[0]['lr']
+                logger.info('Learning rate updates from %.9f to %.9f' % (old_lr, new_lr))
 
             perf_scoreboard.update(top1, top5, epoch)
             is_best = perf_scoreboard.is_best(epoch)
