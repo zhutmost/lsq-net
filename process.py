@@ -55,7 +55,7 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
         top5.update(acc5.item(), inputs.size(0))
 
         if lr_scheduler is not None:
-            lr_scheduler.step(epoch=epoch)
+            lr_scheduler.step(epoch=epoch, batch=batch_idx)
 
         optimizer.zero_grad()
         loss.backward()
