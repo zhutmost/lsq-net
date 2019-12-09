@@ -29,11 +29,11 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def train(train_loader, model, criterion, optimizer, epoch, monitors, args):
-    losses = AverageMeter('Loss')
-    top1 = AverageMeter('Top1')
-    top5 = AverageMeter('Top5')
-    batch_time = AverageMeter('BatchTime')
+def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monitors, args):
+    losses = AverageMeter()
+    top1 = AverageMeter()
+    top5 = AverageMeter()
+    batch_time = AverageMeter()
 
     total_sample = len(train_loader.sampler)
     batch_size = train_loader.batch_size
@@ -54,6 +54,9 @@ def train(train_loader, model, criterion, optimizer, epoch, monitors, args):
         top1.update(acc1.item(), inputs.size(0))
         top5.update(acc5.item(), inputs.size(0))
 
+        if lr_scheduler is not None:
+            lr_scheduler.step(epoch=epoch)
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -63,9 +66,13 @@ def train(train_loader, model, criterion, optimizer, epoch, monitors, args):
 
         if (batch_idx + 1) % args.print_freq == 0:
             for m in monitors:
-                m.update(epoch, batch_idx + 1, steps_per_epoch, 'Training', [
-                    losses, top1, top5, batch_time
-                ])
+                m.update(epoch, batch_idx + 1, steps_per_epoch, 'Training', {
+                    'Loss': losses,
+                    'Top1': top1,
+                    'Top5': top5,
+                    'BatchTime': batch_time,
+                    'LR': optimizer.param_groups[0]['lr']
+                })
 
     logger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f\n',
                 top1.avg, top5.avg, losses.avg)
@@ -73,10 +80,10 @@ def train(train_loader, model, criterion, optimizer, epoch, monitors, args):
 
 
 def validate(data_loader, model, criterion, epoch, monitors, args):
-    losses = AverageMeter('Loss')
-    top1 = AverageMeter('Top1')
-    top5 = AverageMeter('Top5')
-    batch_time = AverageMeter('BatchTime')
+    losses = AverageMeter()
+    top1 = AverageMeter()
+    top5 = AverageMeter()
+    batch_time = AverageMeter()
 
     total_sample = len(data_loader.sampler)
     batch_size = data_loader.batch_size
@@ -103,9 +110,12 @@ def validate(data_loader, model, criterion, epoch, monitors, args):
 
             if (batch_idx + 1) % args.print_freq == 0:
                 for m in monitors:
-                    m.update(epoch, batch_idx + 1, steps_per_epoch, 'Validation', [
-                        losses, top1, top5, batch_time
-                    ])
+                    m.update(epoch, batch_idx + 1, steps_per_epoch, 'Validation', {
+                        'Loss': losses,
+                        'Top1': top1,
+                        'Top5': top5,
+                        'BatchTime': batch_time
+                    })
 
     logger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f\n', top1.avg, top5.avg, losses.avg)
     return top1.avg, top5.avg, losses.avg

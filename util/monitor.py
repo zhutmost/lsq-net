@@ -6,8 +6,7 @@ __all__ = ['ProgressMonitor', 'TensorBoardMonitor', 'AverageMeter']
 class AverageMeter:
     """Computes and stores the average and current value"""
 
-    def __init__(self, name, fmt='%.6f'):
-        self.name = name
+    def __init__(self, fmt='%.6f'):
         self.fmt = fmt
         self.val = self.avg = self.sum = self.count = 0
 
@@ -21,8 +20,7 @@ class AverageMeter:
         self.avg = self.sum / self.count
 
     def __str__(self):
-        s = self.name + ' '
-        s += self.fmt % self.avg
+        s = self.fmt % self.avg
         return s
 
 
@@ -37,7 +35,7 @@ class Monitor:
     def __init__(self):
         pass
 
-    def update(self, epoch, step_idx, step_num, prefix, avg_meters):
+    def update(self, epoch, step_idx, step_num, prefix, meter_dict):
         raise NotImplementedError
 
 
@@ -46,14 +44,19 @@ class ProgressMonitor(Monitor):
         super(ProgressMonitor, self).__init__()
         self.logger = logger
 
-    def update(self, epoch, step_idx, step_num, prefix, avg_meters):
+    def update(self, epoch, step_idx, step_num, prefix, meter_dict):
         msg = prefix
         if epoch > -1:
             msg += ' [%d][%5d/%5d]   ' % (epoch, step_idx, int(step_num))
         else:
             msg += ' [%5d/%5d]   ' % (step_idx, int(step_num))
-        for m in avg_meters:
-            msg += str(m) + '   '
+        for k, v in meter_dict.items():
+            msg += k + ' '
+            if isinstance(v, AverageMeter):
+                msg += str(v)
+            else:
+                msg += '%.6f' % v
+            msg += '   '
         self.logger.info(msg)
 
 
@@ -63,7 +66,8 @@ class TensorBoardMonitor(Monitor):
         self.writer = SummaryWriter(log_dir / 'tb_runs')
         logger.info('TensorBoard data directory: %s/tb_runs' % log_dir)
 
-    def update(self, epoch, step_idx, step_num, prefix, avg_meters):
+    def update(self, epoch, step_idx, step_num, prefix, meter_dict):
         current_step = epoch * step_num + step_idx
-        for m in avg_meters:
-            self.writer.add_scalar(prefix + '/' + m.name, m.val, current_step)
+        for k, v in meter_dict.items():
+            val = v.val if isinstance(v, AverageMeter) else v
+            self.writer.add_scalar(prefix + '/' + k, val, current_step)
