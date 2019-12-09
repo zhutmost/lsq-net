@@ -147,7 +147,7 @@ class PerformanceScoreboard:
         # Keep perf_scores_history sorted from best to worst
         # Sort by top1, top5 and epoch
         self.board.sort(key=operator.attrgetter('top1', 'top5', 'epoch'), reverse=True)
-        for idx in range(self.num_best_scores):
+        for idx in range(min(self.num_best_scores, len(self.board))):
             score = self.board[idx]
             logger.info('Scoreboard best %d ==> Epoch [%d][Top1: %.3f   Top5: %.3f]',
                         idx + 1, score.epoch, score.top1, score.top5)
