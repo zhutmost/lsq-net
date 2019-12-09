@@ -98,9 +98,9 @@ def main():
                                                    lr_scheduler, epoch, monitors, args)
             v_top1, v_top5, v_loss = process.validate(val_loader, model, criterion, epoch, monitors, args)
 
-            tbmonitor.writer.add_scalars('Train vs Validation/Loss', {'train': t_loss, 'val': v_loss}, epoch)
-            tbmonitor.writer.add_scalars('Train vs Validation/Top1', {'train': t_top1, 'val': v_top1}, epoch)
-            tbmonitor.writer.add_scalars('Train vs Validation/Top5', {'train': t_top5, 'val': v_top5}, epoch)
+            tbmonitor.writer.add_scalars('Train_vs_Validation/Loss', {'train': t_loss, 'val': v_loss}, epoch)
+            tbmonitor.writer.add_scalars('Train_vs_Validation/Top1', {'train': t_top1, 'val': v_top1}, epoch)
+            tbmonitor.writer.add_scalars('Train_vs_Validation/Top5', {'train': t_top5, 'val': v_top5}, epoch)
 
             perf_scoreboard.update(v_top1, v_top5, epoch)
             is_best = perf_scoreboard.is_best(epoch)
