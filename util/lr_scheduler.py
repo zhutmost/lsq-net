@@ -130,9 +130,9 @@ class CosineWarmRestartsLr(LrScheduler):
         while True:
             if epoch < curr_cycle:
                 break
+            epoch = epoch - curr_cycle
             curr_cycle *= self.cycle_scale
             curr_amp *= self.amp_scale
-            epoch = epoch - curr_cycle
 
         for i in range(self.num_groups):
             self.current_lr[i] = self.min_lr + 0.5 * curr_amp * (self.base_lr[i] - self.min_lr) \
