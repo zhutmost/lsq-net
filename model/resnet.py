@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 from quan import QuanConv2d
+from .switchable_norm import SwitchNorm2d
 
 __all__ = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152']
 
@@ -173,7 +174,7 @@ class ResNet(nn.Module):
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, QuanConv2d)):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm, SwitchNorm2d)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 

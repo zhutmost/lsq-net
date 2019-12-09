@@ -32,6 +32,8 @@ def get_parser():
                    help='model architecture (currently only ResNet supported)')
     p.add_argument('--pre-trained', dest='pretrained', action='store_true',
                    help='use pre-trained model')
+    p.add_argument('--switchable-norm', action='store_true',
+                   help='use switchable normalization layers instead of batch normalization')
     # quantization
     p.add_argument('--quan-bit-w', metavar='N', dest='nbit_w', type=int,
                    help='bit width of quantized weight')
