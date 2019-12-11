@@ -58,6 +58,26 @@ class FixedLr(LrScheduler):
         pass
 
 
+class LambdaLr(LrScheduler):
+    def __init__(self, lr_lambda, **kwargs):
+        super(LambdaLr, self).__init__(**kwargs)
+        if not isinstance(lr_lambda, list) and not isinstance(lr_lambda, tuple):
+            self.lr_lambdas = [lr_lambda] * self.num_groups
+        else:
+            if len(lr_lambda) != self.num_groups:
+                raise ValueError("Expected {} lr_lambdas, but got {}".format(
+                    self.num_groups, len(lr_lambda)))
+            self.lr_lambdas = list(lr_lambda)
+
+    def step(self, epoch, batch):
+        if self.update_per_batch:
+            epoch = epoch + batch * self.batch_size / self.num_samples
+        for i in range(self.num_groups):
+            func = self.lr_lambdas[i]
+            self.current_lr[i] = func(epoch) * self.base_lr[i]
+        self.set_lr(self.current_lr)
+
+
 class StepLr(LrScheduler):
     def __init__(self, step_size=30, gamma=0.1, **kwargs):
         super(StepLr, self).__init__(**kwargs)
@@ -127,9 +147,7 @@ class CosineWarmRestartsLr(LrScheduler):
 
         curr_cycle = self.cycle
         curr_amp = 1.
-        while True:
-            if epoch < curr_cycle:
-                break
+        while epoch >= curr_cycle:
             epoch = epoch - curr_cycle
             curr_cycle *= self.cycle_scale
             curr_amp *= self.amp_scale
