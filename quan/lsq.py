@@ -75,7 +75,7 @@ class QuanConv2d(t.nn.Conv2d):
         else:
             self.quan_w = Quantize(is_activation=False, bit=quan_bit_w)
 
-        if bias and quan_bit_a is not None and quan_bit_w is not None:
+        if bias and (quan_bit_a is not None or quan_bit_w is not None):
             raise Exception('LSQ cannot quantize biases.')
 
     def forward(self, x):
