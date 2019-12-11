@@ -63,10 +63,10 @@ def main():
     train_loader, val_loader = util.load_data(args.dataset, args.dataset_dir,
                                               args.batch_size, args.load_workers)
     test_loader = val_loader
-    logger.info('Dataset sizes:\n' +
-                '          training = %d(%d)\n' % (len(train_loader.sampler), len(train_loader)) +
-                '        validation = %d(%d)' % (len(val_loader.sampler), len(val_loader)) +
-                '              test = %d(%d)' % (len(test_loader.sampler), len(test_loader)))
+    logger.info('Dataset `%s` size:' % args.dataset +
+                '\n          training = %d (%d)' % (len(train_loader.sampler), len(train_loader)) +
+                '\n        validation = %d (%d)' % (len(val_loader.sampler), len(val_loader)) +
+                '\n              test = %d (%d)' % (len(test_loader.sampler), len(test_loader)))
 
     # Define loss function (criterion) and optimizer
     criterion = t.nn.CrossEntropyLoss().to(args.device)
@@ -82,7 +82,7 @@ def main():
         mode='cos_warm_restarts',
         cycle=5,
         cycle_scale=1.,
-        amp_scale=1.
+        amp_scale=0.5
     )
     logger.info(('Optimizer: %s' % optimizer).replace('\n', '\n' + ' ' * 11))
     logger.info('LR scheduler: %s\n' % lr_scheduler)
@@ -107,7 +107,7 @@ def main():
 
             perf_scoreboard.update(v_top1, v_top5, epoch)
             is_best = perf_scoreboard.is_best(epoch)
-            util.save_checkpoint(epoch, args.arch, model, {'top1': v_top1}, is_best, args.name, log_dir)
+            util.save_checkpoint(epoch, args.arch, model, {'top1': v_top1, 'top5': v_top5}, is_best, args.name, log_dir)
 
 
 if __name__ == "__main__":

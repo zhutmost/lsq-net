@@ -10,6 +10,8 @@ def create_model(args):
     logger = logging.getLogger()
 
     norm_layer = SwitchNorm2d if args.switchable_norm else None
+    if norm_layer is not None and args.pretrained:
+        raise ValueError("Pre-trained model only supports BatchNorm, but got %s" % norm_layer)
 
     model = None
     if args.arch == 'resnet18':
@@ -31,7 +33,12 @@ def create_model(args):
         logger.error('Model architecture is not supported')
         exit(-1)
 
-    logger.info('Created `%s` model for `%s` dataset' % (args.arch, args.dataset))
+    msg = 'Created `%s` model for `%s` dataset' % (args.arch, args.dataset)
+    msg += '\n          Use pre-trained model = %s' % args.pretrained
+    msg += '\n            Normalization layer = %s' % norm_layer
+    msg += '\n           Activation bit-width = %s' % args.nbit_a
+    msg += '\n               Weight bit-width = %s' % args.nbit_w
+    logger.info(msg)
 
     if args.gpu and not args.load_serialized:
         model = t.nn.DataParallel(model, device_ids=args.gpu)
