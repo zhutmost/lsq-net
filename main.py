@@ -57,7 +57,7 @@ def main():
     perf_scoreboard = process.PerformanceScoreboard(args.num_best_scores)
 
     if args.resume:
-        model, start_epoch, _ = util.load_checkpoint(model, args.resume, args.device)
+        model, start_epoch, _ = util.load_checkpoint(model, args.resume, args.device, lean=args.lean_resume)
 
     # Initialize data loader
     train_loader, val_loader = util.load_data(args.dataset, args.dataset_dir,
@@ -72,14 +72,17 @@ def main():
     criterion = t.nn.CrossEntropyLoss().to(args.device)
 
     # optimizer = t.optim.Adam(model.parameters(), lr=args.lr)
-    optimizer = t.optim.SGD([{'params': model.parameters(), 'initial_lr': args.lr}],
-                            lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+    optimizer = t.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum,
+                            weight_decay=args.weight_decay, nesterov=True)
     lr_scheduler = util.lr_scheduler(
         optimizer,
         batch_size=train_loader.batch_size,
         num_samples=len(train_loader.sampler),
         update_per_batch=True,
-        mode='cos_warm_restarts'
+        mode='cos_warm_restarts',
+        cycle=5,
+        cycle_scale=1.,
+        amp_scale=1.
     )
     logger.info(('Optimizer: %s' % optimizer).replace('\n', '\n' + ' ' * 11))
     logger.info('LR scheduler: %s\n' % lr_scheduler)

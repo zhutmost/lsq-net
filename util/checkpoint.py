@@ -3,6 +3,8 @@ import os
 
 import torch as t
 
+logger = logging.getLogger()
+
 
 def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, output_dir='.'):
     """Save a pyTorch training checkpoint
@@ -29,8 +31,6 @@ def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, ou
     filename_best = 'best.pth.tar' if name is None else name + '_best.pth.tar'
     filepath_best = os.path.join(output_dir, filename_best)
 
-    logger = logging.getLogger()
-
     checkpoint = {
         'epoch': epoch,
         'state_dict': model.state_dict(),
@@ -47,7 +47,7 @@ def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, ou
     logger.info(msg)
 
 
-def load_checkpoint(model, chkp_file, model_device=None, strict=False):
+def load_checkpoint(model, chkp_file, model_device=None, strict=False, lean=False):
     """Load a pyTorch training checkpoint.
     Args:
         model: the pyTorch model to which we will load the parameters.  You can
@@ -55,15 +55,14 @@ def load_checkpoint(model, chkp_file, model_device=None, strict=False):
         the model.  The order of the arguments is misleading and clunky, and is
         kept this way for backward compatibility.
         chkp_file: the checkpoint file
-        lean_checkpoint: if set, read into model only 'state_dict' field
+        lean: if set, read into model only 'state_dict' field
         model_device [str]: if set, call model.to($model_device)
                 This should be set to either 'cpu' or 'cuda'.
-    :returns: updated model, compression_scheduler, optimizer, start_epoch
+    :returns: updated model, optimizer, start_epoch
     """
     if not os.path.isfile(chkp_file):
         raise IOError('Cannot find a checkpoint at', chkp_file)
 
-    logger = logging.getLogger()
     checkpoint = t.load(chkp_file, map_location=lambda storage, loc: storage)
 
     if 'state_dict' not in checkpoint:
@@ -90,6 +89,9 @@ def load_checkpoint(model, chkp_file, model_device=None, strict=False):
     if model_device is not None:
         model.to(model_device)
 
-    logger.info("Loaded checkpoint %s model (epoch %d) from %s", arch, start_epoch, chkp_file)
-
-    return model, start_epoch, extras
+    if lean:
+        logger.info("Loaded checkpoint %s model (next epoch %d) from %s", arch, 0, chkp_file)
+        return model, 0, None
+    else:
+        logger.info("Loaded checkpoint %s model (next epoch %d) from %s", arch, start_epoch, chkp_file)
+        return model, start_epoch, extras

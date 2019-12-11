@@ -25,6 +25,8 @@ def get_parser():
                    help='print frequency (default: 20)')
     p.add_argument('--resume', default='', metavar='PATH',
                    help='path to latest checkpoint (default: none)')
+    p.add_argument('--lean-resume', action='store_true',
+                   help='resume model parameters only')
     p.add_argument('--num-best-scores', metavar='N', default=1, type=int,
                    help='number of best scores to track and report (default: 1)')
     # model

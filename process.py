@@ -144,8 +144,7 @@ class PerformanceScoreboard:
     def update(self, top1, top5, epoch):
         """ Update the list of top training scores achieved so far, and log the best scores so far"""
         self.board.append(MutableNamedTuple({'top1': top1, 'top5': top5, 'epoch': epoch}))
-        # Keep perf_scores_history sorted from best to worst
-        # Sort by top1, top5 and epoch
+        # Keep scoreboard sorted from best to worst, and sort by top1, top5 and epoch
         self.board.sort(key=operator.attrgetter('top1', 'top5', 'epoch'), reverse=True)
         for idx in range(min(self.num_best_scores, len(self.board))):
             score = self.board[idx]
