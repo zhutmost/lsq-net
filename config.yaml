@@ -29,7 +29,7 @@ dataloader:
   # Path to dataset directory (currently only ImageNet supported)
   path: /home/fair/Dataset/imagenet
   # Number of data loading workers
-  workers: 16
+  workers: 32
   # Load the model without DataParallel wrapping it
   serialized: false
 
@@ -48,7 +48,7 @@ log:
 #============================ Model ============================================
 
 # Model architecture (currently only ResNet supported)
-# choices: resnet18, resnet34, resnet50, resnet101
+# choices: resnet18, resnet34, resnet50, resnet101, resnet152
 arch: resnet18
 
 # Use pre-trained model
@@ -75,7 +75,7 @@ quan:
 # If this field is true, all the bellowing options will be ignored
 eval: false
 
-batch_size: 256
+batch_size: 64
 epochs: 90
 
 optimizer:
@@ -98,7 +98,23 @@ lr_scheduler:
   # step_size: 30
   # gamma: 0.1
 
+  # Multi-step decay
   # mode: multi_step
+  # milestones: [30, ]
+  # gamma: 0.1
+
+  # Exponential decay
   # mode: exp
+  # gamma: 0.95
+
+  # Cosine annealing
   # mode: cos
+  # lr_min: 0
+  # gamma: 0.95
+
+  # Cosine annealing with warm restarts
   # mode: cos_warm_restarts
+  # lr_min: 0
+  # cycle: 5
+  # cycle_scale: 2
+  # amp_scale: 0.5

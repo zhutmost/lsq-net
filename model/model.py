@@ -15,20 +15,15 @@ def create_model(args):
 
     model = None
     if args.arch == 'resnet18':
-        model = resnet18(pretrained=args.pre_trained, quan_bit_w=args.quan.bit_w,
-                         quan_bit_a=args.quan.bit_a, norm_layer=norm_layer)
+        model = resnet18(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
     elif args.arch == 'resnet34':
-        model = resnet34(pretrained=args.pre_trained, quan_bit_w=args.quan.bit_w,
-                         quan_bit_a=args.quan.bit_a, norm_layer=norm_layer)
+        model = resnet34(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
     elif args.arch == 'resnet50':
-        model = resnet50(pretrained=args.pre_trained, quan_bit_w=args.quan.bit_w,
-                         quan_bit_a=args.quan.bit_a, norm_layer=norm_layer)
+        model = resnet50(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
     elif args.arch == 'resnet101':
-        model = resnet101(pretrained=args.pre_trained, quan_bit_w=args.quan.bit_w,
-                          quan_bit_a=args.quan.bit_a, norm_layer=norm_layer)
+        model = resnet101(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
     elif args.arch == 'resnet152':
-        model = resnet152(pretrained=args.pre_trained, quan_bit_w=args.quan.bit_w,
-                          quan_bit_a=args.quan.bit_a, norm_layer=norm_layer)
+        model = resnet152(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
     else:
         logger.error('Model architecture is not supported')
         exit(-1)

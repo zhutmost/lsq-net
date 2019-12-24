@@ -155,8 +155,9 @@ class ResNet(nn.Module):
         self.groups = groups
         self.base_width = width_per_group
 
-        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
-                               bias=False)
+        # self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = QuanConv2d(3, self.inplanes, quan_bit_w=quan_bit_w, quan_bit_a=quan_bit_a,
+                                kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -231,9 +232,20 @@ class ResNet(nn.Module):
         return x
 
 
-def _resnet(arch, block, layers, pretrained, progress, **kwargs):
-    model = ResNet(block, layers, **kwargs)
-    if pretrained:
+def _resnet(arch, block, layers, pre_trained, progress, quan_scheduler, **kwargs):
+    model = ResNet(block, layers, quan_bit_a=quan_scheduler.bit_a, quan_bit_w=quan_scheduler.bit_w, **kwargs)
+
+    for name, module in model.named_modules():
+        if name in quan_scheduler.excepts:
+            quan_bit_a = quan_scheduler.excepts[name].get('bit_a', module.quan_a)
+            quan_bit_w = quan_scheduler.excepts[name].get('bit_w', module.quan_a)
+            if not isinstance(module, (QuanConv2d, t.nn.Conv2d)):
+                raise ValueError('The specified layer %s cannot be quantized' % name)
+            model.add_module(name, QuanConv2d(
+                module.in_channels, module.out_channels, module.kernel_size,
+                quan_bit_w=quan_bit_w, quan_bit_a=quan_bit_a, bias=True if module.bias else False))
+
+    if pre_trained:
         param_dict = model_zoo.load_url(model_urls[arch], progress=progress)
         for name, param in model.named_parameters():
             if name.endswith('.quan_a.s'):
@@ -245,26 +257,26 @@ def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     return model
 
 
-def resnet18(pretrained=False, progress=True, **kwargs):
-    return _resnet('resnet18', BasicBlock, [2, 2, 2, 2], pretrained, progress,
+def resnet18(pre_trained=False, progress=True, **kwargs):
+    return _resnet('resnet18', BasicBlock, [2, 2, 2, 2], pre_trained, progress,
                    **kwargs)
 
 
-def resnet34(pretrained=False, progress=True, **kwargs):
-    return _resnet('resnet34', BasicBlock, [3, 4, 6, 3], pretrained, progress,
+def resnet34(pre_trained=False, progress=True, **kwargs):
+    return _resnet('resnet34', BasicBlock, [3, 4, 6, 3], pre_trained, progress,
                    **kwargs)
 
 
-def resnet50(pretrained=False, progress=True, **kwargs):
-    return _resnet('resnet50', Bottleneck, [3, 4, 6, 3], pretrained, progress,
+def resnet50(pre_trained=False, progress=True, **kwargs):
+    return _resnet('resnet50', Bottleneck, [3, 4, 6, 3], pre_trained, progress,
                    **kwargs)
 
 
-def resnet101(pretrained=False, progress=True, **kwargs):
-    return _resnet('resnet101', Bottleneck, [3, 4, 23, 3], pretrained, progress,
+def resnet101(pre_trained=False, progress=True, **kwargs):
+    return _resnet('resnet101', Bottleneck, [3, 4, 23, 3], pre_trained, progress,
                    **kwargs)
 
 
-def resnet152(pretrained=False, progress=True, **kwargs):
-    return _resnet('resnet152', Bottleneck, [3, 8, 36, 3], pretrained, progress,
+def resnet152(pre_trained=False, progress=True, **kwargs):
+    return _resnet('resnet152', Bottleneck, [3, 8, 36, 3], pre_trained, progress,
                    **kwargs)
