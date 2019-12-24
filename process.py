@@ -43,8 +43,8 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
     model.train()
     end_time = time.time()
     for batch_idx, (inputs, targets) in enumerate(train_loader):
-        inputs = inputs.to(args.device)
-        targets = targets.to(args.device)
+        inputs = inputs.to(args.device.type)
+        targets = targets.to(args.device.type)
 
         outputs = model(inputs)
         loss = criterion(outputs, targets)
@@ -64,7 +64,7 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
         batch_time.update(time.time() - end_time)
         end_time = time.time()
 
-        if (batch_idx + 1) % args.print_freq == 0:
+        if (batch_idx + 1) % args.log.print_freq == 0:
             for m in monitors:
                 m.update(epoch, batch_idx + 1, steps_per_epoch, 'Training', {
                     'Loss': losses,
@@ -95,8 +95,8 @@ def validate(data_loader, model, criterion, epoch, monitors, args):
     end_time = time.time()
     for batch_idx, (inputs, targets) in enumerate(data_loader):
         with t.no_grad():
-            inputs = inputs.to(args.device)
-            targets = targets.to(args.device)
+            inputs = inputs.to(args.device.type)
+            targets = targets.to(args.device.type)
 
             outputs = model(inputs)
             loss = criterion(outputs, targets)
@@ -108,7 +108,7 @@ def validate(data_loader, model, criterion, epoch, monitors, args):
             batch_time.update(time.time() - end_time)
             end_time = time.time()
 
-            if (batch_idx + 1) % args.print_freq == 0:
+            if (batch_idx + 1) % args.log.print_freq == 0:
                 for m in monitors:
                     m.update(epoch, batch_idx + 1, steps_per_epoch, 'Validation', {
                         'Loss': losses,

@@ -1,0 +1,104 @@
+#===============================================================================
+#                      Default Configuration for LSQ-Net
+#===============================================================================
+# Please do NOT modify this file directly. If you want to modify configurations,
+# please:
+# 1. Create a new YAML file and copy some bellowing options to it.
+# 2. Modify these options in your YAML file.
+# 3. run main.py with your configuration file in the command line, like this:
+#       $ python main.py path/to/your/config/file
+# The options modified in your configuration file will overwrite those in this
+# file.
+#============================ Environment ======================================
+
+# Experiment name
+name: MyProject
+
+# Name of output directory. Checkpoints and logs will be saved at `pwd`/output_dir
+output_dir: out
+
+# Device to be used
+device:
+  # Use CPU or GPU (choices: cpu, cuda)
+  type: cuda
+  # GPU device IDs to be used. Only valid when device.type is 'cuda'
+  gpu: [0, 1]
+
+# Dataset loader
+dataloader:
+  # Path to dataset directory (currently only ImageNet supported)
+  path: /home/fair/Dataset/imagenet
+  # Number of data loading workers
+  workers: 16
+  # Load the model without DataParallel wrapping it
+  serialized: false
+
+resume:
+  # Path to a checkpoint to be loaded. Leave blank to skip
+  path:
+  # Resume model parameters only
+  lean: false
+
+log:
+  # Number of best scores to track and report
+  num_best_scores: 3
+  # Print frequency
+  print_freq: 20
+
+#============================ Model ============================================
+
+# Model architecture (currently only ResNet supported)
+# choices: resnet18, resnet34, resnet50, resnet101
+arch: resnet18
+
+# Use pre-trained model
+pre_trained: true
+
+# Use switchable normalization layers instead of batch normalization
+switchable_norm: false
+
+#============================ Quantization =====================================
+
+quan:
+  # Bit width of quantized weight (default for all layers)
+  bit_w:
+  # Bit width of quantized activation (default for all layers)
+  bit_a:
+  excepts:
+    # Specify quantized bit width for some layers, like this:
+    # model.fc1:
+    #   bit_w: 8
+
+#============================ Training / Evaluation ============================
+
+# Evaluate the model without training
+# If this field is true, all the bellowing options will be ignored
+eval: false
+
+batch_size: 256
+epochs: 90
+
+optimizer:
+  learning_rate: 0.01
+  momentum: 0.9
+  weight_decay: 0.0001
+
+# Learning rate scheduler
+lr_scheduler:
+  # Update learning rate per batch or epoch
+  update_per_batch: true
+
+  # Uncomment one of bellowing options to activate a learning rate scheduling
+
+  # Fixed learning rate
+  mode: fixed
+
+  # Step decay
+  # mode: step
+  # step_size: 30
+  # gamma: 0.1
+
+  # mode: multi_step
+  # mode: exp
+  # mode: cos
+  # mode: cos_warm_restarts

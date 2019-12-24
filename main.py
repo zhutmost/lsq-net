@@ -9,10 +9,9 @@ from model import create_model
 
 
 def main():
-    # Parse arguments
-    args = util.get_parser().parse_args()
-
     script_dir = Path.cwd()
+    args = util.get_config(default_file=script_dir / 'config.yaml')
+
     output_dir = script_dir / args.output_dir
     output_dir.mkdir(exist_ok=True)
 
@@ -23,66 +22,57 @@ def main():
     tbmonitor = util.TensorBoardMonitor(logger, log_dir)
     monitors = [pymonitor, tbmonitor]
 
-    if args.cpu or not t.cuda.is_available() or args.gpu == '':
-        args.device = 'cpu'
-        args.gpu = []
+    if args.device.type == 'cpu' or not t.cuda.is_available() or args.device.gpu == []:
+        args.device.gpu = []
     else:
-        args.device = 'cuda'
-        try:
-            args.gpu = [int(s) for s in args.gpu.split(',')]
-        except ValueError:
-            logger.error('Argument --gpu must be a comma-separated list of integers only')
-            exit(1)
         available_gpu = t.cuda.device_count()
-        for dev_id in args.gpu:
+        for dev_id in args.device.gpu:
             if dev_id >= available_gpu:
                 logger.error('GPU device ID {0} requested, but only {1} devices available'
                              .format(dev_id, available_gpu))
                 exit(1)
-        # Set default device in case the first one on the list != 0
-        t.cuda.set_device(args.gpu[0])
+        # Set default device in case the first one on the list
+        t.cuda.set_device(args.device.gpu[0])
         # Enable the cudnn built-in auto-tuner to accelerating training, but it
         # will introduce some fluctuations in a narrow range.
-        t.backends.cudnn.benchmark = False
-        t.backends.cudnn.deterministic = True
+        t.backends.cudnn.benchmark = True
+        t.backends.cudnn.deterministic = False
 
     # Currently only ImageNet dataset is supported
-    args.dataset = 'imagenet'
-    args.num_classes = 1000
+    args.dataloader.dataset = 'imagenet'
+    args.dataloader.num_classes = 1000
 
     # Create the model
     model = create_model(args)
 
     start_epoch = 0
-    perf_scoreboard = process.PerformanceScoreboard(args.num_best_scores)
+    perf_scoreboard = process.PerformanceScoreboard(args.log.num_best_scores)
 
-    if args.resume:
-        model, start_epoch, _ = util.load_checkpoint(model, args.resume, args.device, lean=args.lean_resume)
+    if args.resume.path:
+        model, start_epoch, _ = util.load_checkpoint(
+            model, args.resume.path, args.device.type, lean=args.resume.lean)
 
     # Initialize data loader
-    train_loader, val_loader = util.load_data(args.dataset, args.dataset_dir,
-                                              args.batch_size, args.load_workers)
+    train_loader, val_loader = util.load_data(args.dataloader.dataset, args.dataloader.path,
+                                              args.batch_size, args.dataloader.workers)
     test_loader = val_loader
-    logger.info('Dataset `%s` size:' % args.dataset +
+    logger.info('Dataset `%s` size:' % args.dataloader.dataset +
                 '\n          training = %d (%d)' % (len(train_loader.sampler), len(train_loader)) +
                 '\n        validation = %d (%d)' % (len(val_loader.sampler), len(val_loader)) +
                 '\n              test = %d (%d)' % (len(test_loader.sampler), len(test_loader)))
 
     # Define loss function (criterion) and optimizer
-    criterion = t.nn.CrossEntropyLoss().to(args.device)
+    criterion = t.nn.CrossEntropyLoss().to(args.device.type)
 
-    # optimizer = t.optim.Adam(model.parameters(), lr=args.lr)
-    optimizer = t.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum,
-                            weight_decay=args.weight_decay, nesterov=True)
+    optimizer = t.optim.Adam(model.parameters(), lr=args.optimizer.learning_rate)
+    # optimizer = t.optim.SGD(model.parameters(), lr=args.optimizer.learning_rate, momentum=args.optimizer.momentum,
+    #                         weight_decay=args.optimizer.weight_decay)
+    # lr_scheduler = None
     lr_scheduler = util.lr_scheduler(
         optimizer,
         batch_size=train_loader.batch_size,
         num_samples=len(train_loader.sampler),
-        update_per_batch=True,
-        mode='cos_warm_restarts',
-        cycle=5,
-        cycle_scale=1.,
-        amp_scale=0.5
+        **args.lr_scheduler
     )
     logger.info(('Optimizer: %s' % optimizer).replace('\n', '\n' + ' ' * 11))
     logger.info('LR scheduler: %s\n' % lr_scheduler)
@@ -90,7 +80,7 @@ def main():
     if args.eval:
         process.validate(test_loader, model, criterion, -1, monitors, args)
     else:  # training
-        if args.resume or args.pretrained:
+        if args.resume.path or args.pre_trained:
             logger.info('>>>>>>>> Epoch -1 (pre-trained model evaluation)')
             top1, top5, _ = process.validate(test_loader, model, criterion,
                                              start_epoch - 1, monitors, args)
