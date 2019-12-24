@@ -48,8 +48,9 @@ class LrScheduler:
 
     def __str__(self):
         s = '`%s`' % self.__class__.__name__
+        s += '\n    Update per batch: %s' % self.update_per_batch
         for i in range(self.num_groups):
-            s += '\n        Group %d: %g' % (i, self.current_lr[i])
+            s += '\n             Group %d: %g' % (i, self.current_lr[i])
         return s
 
 
