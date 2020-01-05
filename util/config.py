@@ -8,6 +8,16 @@ import munch
 import yaml
 
 
+def merge_nested_dict(d, other):
+    new = dict(d)
+    for k, v in other.items():
+        if d.get(k, None) is not None and type(v) is dict:
+            new[k] = merge_nested_dict(d[k], v)
+        else:
+            new[k] = v
+    return new
+
+
 def get_config(default_file):
     p = argparse.ArgumentParser(description='Learned Step Size Quantization')
     p.add_argument('config_file', metavar='PATH', nargs='+',
@@ -22,11 +32,7 @@ def get_config(default_file):
             raise FileNotFoundError('Cannot find a configuration file at', f)
         with open(f) as yaml_file:
             c = yaml.safe_load(yaml_file)
-            for k, v in c.items():
-                if k in cfg:
-                    cfg[k] = v
-                else:
-                    raise ValueError('Unexpected configuration option', k)
+            cfg = merge_nested_dict(cfg, c)
 
     return munch.munchify(cfg)
 
