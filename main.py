@@ -64,16 +64,15 @@ def main():
     # Define loss function (criterion) and optimizer
     criterion = t.nn.CrossEntropyLoss().to(args.device.type)
 
-    optimizer = t.optim.Adam(model.parameters(), lr=args.optimizer.learning_rate)
-    # optimizer = t.optim.SGD(model.parameters(), lr=args.optimizer.learning_rate, momentum=args.optimizer.momentum,
-    #                         weight_decay=args.optimizer.weight_decay)
-    # lr_scheduler = None
-    lr_scheduler = util.lr_scheduler(
-        optimizer,
-        batch_size=train_loader.batch_size,
-        num_samples=len(train_loader.sampler),
-        **args.lr_scheduler
-    )
+    # optimizer = t.optim.Adam(model.parameters(), lr=args.optimizer.learning_rate)
+    optimizer = t.optim.SGD(model.parameters(),
+                            lr=args.optimizer.learning_rate,
+                            momentum=args.optimizer.momentum,
+                            weight_decay=args.optimizer.weight_decay)
+    lr_scheduler = util.lr_scheduler(optimizer,
+                                     batch_size=train_loader.batch_size,
+                                     num_samples=len(train_loader.sampler),
+                                     **args.lr_scheduler)
     logger.info(('Optimizer: %s' % optimizer).replace('\n', '\n' + ' ' * 11))
     logger.info('LR scheduler: %s\n' % lr_scheduler)
 

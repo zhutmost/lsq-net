@@ -121,21 +121,6 @@ def validate(data_loader, model, criterion, epoch, monitors, args):
     return top1.avg, top5.avg, losses.avg
 
 
-class MutableNamedTuple(dict):
-    def __init__(self, init_dict):
-        for k, v in init_dict.items():
-            self[k] = v
-
-    def __getattr__(self, key):
-        return self[key]
-
-    def __setattr__(self, key, val):
-        if key in self.__dict__:
-            self.__dict__[key] = val
-        else:
-            self[key] = val
-
-
 class PerformanceScoreboard:
     def __init__(self, num_best_scores):
         self.board = list()
@@ -143,13 +128,17 @@ class PerformanceScoreboard:
 
     def update(self, top1, top5, epoch):
         """ Update the list of top training scores achieved so far, and log the best scores so far"""
-        self.board.append(MutableNamedTuple({'top1': top1, 'top5': top5, 'epoch': epoch}))
+        self.board.append({'top1': top1, 'top5': top5, 'epoch': epoch})
+
         # Keep scoreboard sorted from best to worst, and sort by top1, top5 and epoch
-        self.board.sort(key=operator.attrgetter('top1', 'top5', 'epoch'), reverse=True)
-        for idx in range(min(self.num_best_scores, len(self.board))):
+        curr_len = min(self.num_best_scores, len(self.board))
+        self.board = sorted(self.board,
+                            key=operator.itemgetter('top1', 'top5', 'epoch'),
+                            reverse=True)[0:curr_len]
+        for idx in range(curr_len):
             score = self.board[idx]
             logger.info('Scoreboard best %d ==> Epoch [%d][Top1: %.3f   Top5: %.3f]',
-                        idx + 1, score.epoch, score.top1, score.top5)
+                        idx + 1, score['epoch'], score['top1'], score['top5'])
 
     def is_best(self, epoch):
-        return self.board[0].epoch == epoch
+        return self.board[0]['epoch'] == epoch
