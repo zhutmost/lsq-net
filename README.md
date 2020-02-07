@@ -5,9 +5,7 @@
 This is an unofficial implementation of LSQ-Net, a deep neural network quantization framework.
 LSQ-Net is proposed by Steven K. Esser and et al. from IBM. It can be found on [arXiv:1902.08153](https://arxiv.org/abs/1902.08153).
 
-|Model|Quantization|Top-1 @ Original|Top-1 @ This work|Top-5 @ Original|Top-5 @ This work|
-|:----------:|:------:|:----:|:----:|:----:|:----:|
-| ResNet-18  | w3, a3 | 70.2 | 69.8 | 89.4 | 89.3 |
+Due to the outbreak of coronavirus pneumonia in China, I cannot return to my laboratory for the time being, so several latest commits and experimental results have not been pushed to this repository. Currently, my implementation can obtain the same accuracy as in the original paper.
 
 There are some little differences between my implementation and the original paper, which will be described in detail below.
 
@@ -77,17 +75,3 @@ All you need is to extend the `Quantize` class in `quan/lsq.py`. With it, you ca
 I am not a professional algorithm researcher, and the current accuracy is enough for me. And I only have very limited GPU resources. Thus, I may not spend too much time continuing to optimize its results.
 
 However, if you find any bugs in my code or have any ideas to improve the quantization results, please feel free to open an issue. I will be glad to join the discussion.
-
-## Citation
-
-If you use my code in your experiment, or cite my results in your publication, please cite this website besides Esser's original paper.
-
-```bibtex
-@misc{zhu2019lsq,
-    title={Haozhe Zhu's implementation of Learned Step Size Quantization}
-    author={Zhu, Haozhe and Chen, Chixiao},
-    year={2019},
-    howpublished={\url{https://github.com/zhutmost/lsq-net}}
-    note = {Accessed: 2020-01-04}
-}
-```
