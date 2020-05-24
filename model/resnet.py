@@ -238,7 +238,7 @@ def _resnet(arch, block, layers, pre_trained, progress, quan_scheduler, **kwargs
     for name, module in model.named_modules():
         if name in quan_scheduler.excepts:
             quan_bit_a = quan_scheduler.excepts[name].get('bit_a', module.quan_a)
-            quan_bit_w = quan_scheduler.excepts[name].get('bit_w', module.quan_a)
+            quan_bit_w = quan_scheduler.excepts[name].get('bit_w', module.quan_w)
             if not isinstance(module, (QuanConv2d, t.nn.Conv2d)):
                 raise ValueError('The specified layer %s cannot be quantized' % name)
             model.add_module(name, QuanConv2d(
