@@ -243,7 +243,9 @@ def _resnet(arch, block, layers, pre_trained, progress, quan_scheduler, **kwargs
                 raise ValueError('The specified layer %s cannot be quantized' % name)
             model.add_module(name, QuanConv2d(
                 module.in_channels, module.out_channels, module.kernel_size,
-                quan_bit_w=quan_bit_w, quan_bit_a=quan_bit_a, bias=True if module.bias else False))
+                quan_bit_w=quan_bit_w, quan_bit_a=quan_bit_a, bias=True if module.bias else False,
+                stride=module.stride, padding=module.padding
+            ))
 
     if pre_trained:
         param_dict = model_zoo.load_url(model_urls[arch], progress=progress)
