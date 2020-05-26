@@ -27,11 +27,13 @@ device:
 # Dataset loader
 dataloader:
   # Path to dataset directory (currently only ImageNet supported)
-  path: /home/fair/Dataset/imagenet
+  path: /localhome/fair/Dataset/imagenet
   # Number of data loading workers
   workers: 32
   # Load the model without DataParallel wrapping it
   serialized: false
+  # Portion of training dataset to set aside for validation (range: [0, 1))
+  val_split: 0.0
 
 resume:
   # Path to a checkpoint to be loaded. Leave blank to skip

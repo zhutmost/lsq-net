@@ -53,9 +53,9 @@ def main():
             model, args.resume.path, args.device.type, lean=args.resume.lean)
 
     # Initialize data loader
-    train_loader, val_loader = util.load_data(args.dataloader.dataset, args.dataloader.path,
-                                              args.batch_size, args.dataloader.workers)
-    test_loader = val_loader
+    train_loader, val_loader, test_loader = util.load_data(
+        args.dataloader.dataset, args.dataloader.path, args.batch_size,
+        args.dataloader.workers, args.dataloader.val_split)
     logger.info('Dataset `%s` size:' % args.dataloader.dataset +
                 '\n          training = %d (%d)' % (len(train_loader.sampler), len(train_loader)) +
                 '\n        validation = %d (%d)' % (len(val_loader.sampler), len(val_loader)) +
@@ -81,7 +81,7 @@ def main():
     else:  # training
         if args.resume.path or args.pre_trained:
             logger.info('>>>>>>>> Epoch -1 (pre-trained model evaluation)')
-            top1, top5, _ = process.validate(test_loader, model, criterion,
+            top1, top5, _ = process.validate(val_loader, model, criterion,
                                              start_epoch - 1, monitors, args)
             perf_scoreboard.update(top1, top5, start_epoch - 1)
         for epoch in range(start_epoch, args.epochs):
@@ -97,6 +97,9 @@ def main():
             perf_scoreboard.update(v_top1, v_top5, epoch)
             is_best = perf_scoreboard.is_best(epoch)
             util.save_checkpoint(epoch, args.arch, model, {'top1': v_top1, 'top5': v_top5}, is_best, args.name, log_dir)
+
+        logger.info('>>>>>>>> Epoch -1 (final model evaluation)')
+        process.validate(test_loader, model, criterion, -1, monitors, args)
 
 
 if __name__ == "__main__":
