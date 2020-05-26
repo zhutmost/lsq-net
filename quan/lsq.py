@@ -81,4 +81,4 @@ class QuanConv2d(t.nn.Conv2d):
     def forward(self, x):
         weight_quan = self.quan_w(self.weight)
         act_quan = self.quan_a(x)
-        return self.conv2d_forward(act_quan, weight_quan)
+        return self._conv_forward(act_quan, weight_quan)
