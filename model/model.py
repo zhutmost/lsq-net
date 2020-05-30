@@ -28,8 +28,8 @@ def create_model(args):
     elif args.dataset.dataset == 'cifar10':
         pass
 
-    if model == None:
-        logger.error('Model architecture `%s` for `%s` dataset is not supported' % (args.arch, args.dataloader.dataset)
+    if model is None:
+        logger.error('Model architecture `%s` for `%s` dataset is not supported' % (args.arch, args.dataloader.dataset))
         exit(-1)
 
     msg = 'Created `%s` model for `%s` dataset' % (args.arch, args.dataloader.dataset)
