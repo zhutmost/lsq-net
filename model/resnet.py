@@ -1,3 +1,5 @@
+import logging
+
 import torch as t
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
@@ -246,6 +248,10 @@ def _resnet(arch, block, layers, pre_trained, progress, quan_scheduler, **kwargs
                 quan_bit_w=quan_bit_w, quan_bit_a=quan_bit_a, bias=True if module.bias else False,
                 stride=module.stride, padding=module.padding
             ))
+    module_names = [n for n, _ in model.named_modules()]
+    for name in quan_scheduler.excepts:
+        if name not in module_names:
+            logging.warning('Cannot find module %s in the model, skip it' % name)
 
     if pre_trained:
         param_dict = model_zoo.load_url(model_urls[arch], progress=progress)
