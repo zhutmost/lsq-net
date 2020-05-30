@@ -26,6 +26,10 @@ device:
 
 # Dataset loader
 dataloader:
+  # Dataset to train/validate (choices: imagenet, cifar10)
+  dataset: imagenet
+  # Number of categories in the specified dataset (choices: 1000, 10)
+  num_classes: 1000
   # Path to dataset directory (currently only ImageNet supported)
   path: /localhome/fair/Dataset/imagenet
   # Number of data loading workers

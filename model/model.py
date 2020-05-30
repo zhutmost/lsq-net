@@ -14,18 +14,22 @@ def create_model(args):
         raise ValueError("Pre-trained model only supports BatchNorm, but got %s" % norm_layer)
 
     model = None
-    if args.arch == 'resnet18':
-        model = resnet18(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
-    elif args.arch == 'resnet34':
-        model = resnet34(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
-    elif args.arch == 'resnet50':
-        model = resnet50(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
-    elif args.arch == 'resnet101':
-        model = resnet101(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
-    elif args.arch == 'resnet152':
-        model = resnet152(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
-    else:
-        logger.error('Model architecture is not supported')
+    if args.dataloader.dataset == 'imagenet':
+        if args.arch == 'resnet18':
+            model = resnet18(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+        elif args.arch == 'resnet34':
+            model = resnet34(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+        elif args.arch == 'resnet50':
+            model = resnet50(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+        elif args.arch == 'resnet101':
+            model = resnet101(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+        elif args.arch == 'resnet152':
+            model = resnet152(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+    elif args.dataset.dataset == 'cifar10':
+        pass
+
+    if model == None:
+        logger.error('Model architecture `%s` for `%s` dataset is not supported' % (args.arch, args.dataloader.dataset)
         exit(-1)
 
     msg = 'Created `%s` model for `%s` dataset' % (args.arch, args.dataloader.dataset)

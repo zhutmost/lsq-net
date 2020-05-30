@@ -38,10 +38,6 @@ def main():
         t.backends.cudnn.benchmark = True
         t.backends.cudnn.deterministic = False
 
-    # Currently only ImageNet dataset is supported
-    args.dataloader.dataset = 'imagenet'
-    args.dataloader.num_classes = 1000
-
     # Create the model
     model = create_model(args)
 
