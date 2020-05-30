@@ -3,7 +3,8 @@ import math
 
 def lr_scheduler(optimizer, mode, batch_size=None, num_samples=None, update_per_batch=False, **kwargs):
     # variables batch_size & num_samples are only used when the learning rate updated every epoch
-    assert update_per_batch and isinstance(batch_size, int) and isinstance(num_samples, int)
+    if update_per_batch:
+        assert isinstance(batch_size, int) and isinstance(num_samples, int)
 
     if mode == 'fixed':
         scheduler = FixedLr

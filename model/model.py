@@ -3,28 +3,23 @@ import logging
 import torch as t
 
 from .resnet import *
-from .switchable_norm import SwitchNorm2d
 
 
 def create_model(args):
     logger = logging.getLogger()
 
-    norm_layer = SwitchNorm2d if args.switchable_norm else None
-    if norm_layer is not None and args.pre_trained:
-        raise ValueError("Pre-trained model only supports BatchNorm, but got %s" % norm_layer)
-
     model = None
     if args.dataloader.dataset == 'imagenet':
         if args.arch == 'resnet18':
-            model = resnet18(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+            model = resnet18(pre_trained=args.pre_trained, quan_scheduler=args.quan)
         elif args.arch == 'resnet34':
-            model = resnet34(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+            model = resnet34(pre_trained=args.pre_trained, quan_scheduler=args.quan)
         elif args.arch == 'resnet50':
-            model = resnet50(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+            model = resnet50(pre_trained=args.pre_trained, quan_scheduler=args.quan)
         elif args.arch == 'resnet101':
-            model = resnet101(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+            model = resnet101(pre_trained=args.pre_trained, quan_scheduler=args.quan)
         elif args.arch == 'resnet152':
-            model = resnet152(pre_trained=args.pre_trained, norm_layer=norm_layer, quan_scheduler=args.quan)
+            model = resnet152(pre_trained=args.pre_trained, quan_scheduler=args.quan)
     elif args.dataset.dataset == 'cifar10':
         pass
 

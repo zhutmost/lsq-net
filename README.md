@@ -18,7 +18,9 @@ If this repository is helpful to you, please star it.
 First install library dependencies within an Anaconda environment.
 
 ```bash
-# PyTorch GPU version
+# Create a environment with Python 3.8
+conda create -n lsq python=3.8
+# PyTorch GPU version >= 1.5
 conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
 # Tensorboard visualization tool
 conda install tensorboard
@@ -43,9 +45,21 @@ After every epoch, the program will automatically store the best model parameter
 ## Implementation Differences From the Original Paper
 
 LSQ-Net paper has two versions, [v1](https://arxiv.org/pdf/1902.08153v2.pdf) and [v2](https://arxiv.org/pdf/1902.08153v1.pdf).
-To improve accuracy, the authors expanded the quantization space in the v2 version.
+To improve accuracy, the authors expanded the quantization space in the v2 version. 
+Recently they released a new version [v3](https://arxiv.org/pdf/1902.08153v3.pdf), which fixed some typos in the v2 version.
 
 My implementation generally follows the v2 version, except for the following points.
+
+### Quantization of the First and Last Layers
+
+The authors quantize the first convolution layer and the last fully-connected layer to 8-bit fixed-point numbers. However, their description is not clear. Due to the normalization in the input image preprocessing stage, the input of the first layer may be negative, so it cannot be applied to the activation quantizer in the original paper.
+Therefore, please handle the first layer carefully. In my case, I put it in `quan.excepts` to avoid quantization.
+
+### Initial Values of the Quantization Step Size
+
+The authors use 2<|v|>/sqrt(Qp) as initial values of the step sizes in both weight and activation quantization layers, where Qp is the upper bound of the quantization space, and v is the initial weight values or the first batch of activations.
+
+In my implementation, the step sizes in weight quantization layers are initialized as `Tensor(v.abs().mean()/Qp)`. In activation quantization layers, the step sizes are initialized as `Tensor(1.0)`.
 
 ### Optimizers and Hyper-parameters
 
@@ -56,19 +70,11 @@ I also use a SGD optimizer, but the weight decay is fixed to 10^-4. A step sched
 
 All the configurable hyper-parameters can be found in the YAML configuration file.
 
-### Initial Values of the Quantization Step Size
-
-The authors use 2<|v|>/sqrt(Qp) as initial values of the step sizes in both weight and activation quantization layers, where Qp is the upper bound of the quantization space, and v is the initial weight values or the first batch of activations.
-
-In my implementation, the step sizes in weight quantization layers are initialized as `Tensor(v.abs().mean()/Qp)`. In activation quantization layers, the step sizes are initialized as `Tensor(1.0)`.
-
 ### Supported Models
 
 Currently, only ResNet-18/34/50/101/152 is supported, because I do not have enough GPUs to evaluate my code on other networks. Nevertheless, it is easy to add another new architecture beside ResNet.
 
 All you need is to extend the `Quantize` class in `quan/lsq.py`. With it, you can easily insert activation/weight quantization layers before matrix multiplication in your networks. Please refer to the implementation of the `QuanConv2d` class.
-
-[Switchable Normalization](https://github.com/switchablenorms/Switchable-Normalization) is also integrated, but I never use it in quantization. It could, theoretically, increase the final accuracy.
 
 ## Contributing Guide
 

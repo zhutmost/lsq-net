@@ -60,9 +60,6 @@ arch: resnet18
 # Use pre-trained model
 pre_trained: true
 
-# Use switchable normalization layers instead of batch normalization
-switchable_norm: false
-
 #============================ Quantization =====================================
 
 quan:
@@ -116,7 +113,7 @@ lr_scheduler:
   # Cosine annealing
   # mode: cos
   # lr_min: 0
-  # gamma: 0.95
+  # cycle: 0.95
 
   # Cosine annealing with warm restarts
   # mode: cos_warm_restarts
