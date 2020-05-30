@@ -1,36 +1,18 @@
 import torch as t
 
 
-class Detach(t.autograd.Function):
-    @staticmethod
-    def forward(ctx, x):
-        return x
-
-    @staticmethod
-    def backward(ctx, grad_y):
-        return t.zeros_like(grad_y)
-
-
-def detach(x):
-    return Detach.apply(x)
-
-
 class GradScale(t.nn.Module):
     def forward(self, x, scale):
         y = x
         y_grad = x / scale
-        return detach(y - y_grad) + y_grad
+        return (y - y_grad).detach() + y_grad
 
 
 class RoundPass(t.nn.Module):
     def forward(self, x):
         y = x.round()
         y_grad = x
-        return detach(y - y_grad) + y_grad
-
-
-def identity(x, *args, **kwargs):
-    return x
+        return (y - y_grad).detach() + y_grad
 
 
 class Quantize(t.nn.Module):
@@ -66,12 +48,12 @@ class QuanConv2d(t.nn.Conv2d):
         super(QuanConv2d, self).__init__(in_channels, out_channels, kernel_size, bias=bias, **kwargs)
 
         if quan_bit_a is None:
-            self.quan_a = identity
+            self.quan_a = t.nn.Identity()
         else:
             self.quan_a = Quantize(is_activation=True, bit=quan_bit_a)
 
         if quan_bit_w is None:
-            self.quan_w = identity
+            self.quan_w = t.nn.Identity()
         else:
             self.quan_w = Quantize(is_activation=False, bit=quan_bit_w)
 
