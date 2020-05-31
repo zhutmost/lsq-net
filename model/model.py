@@ -29,7 +29,6 @@ def create_model(args):
 
     msg = 'Created `%s` model for `%s` dataset' % (args.arch, args.dataloader.dataset)
     msg += '\n          Use pre-trained model = %s' % args.pre_trained
-    msg += '\n            Normalization layer = %s' % norm_layer
     msg += '\n           Activation bit-width = %s' % args.quan.bit_a
     msg += '\n               Weight bit-width = %s' % args.quan.bit_w
     logger.info(msg)
