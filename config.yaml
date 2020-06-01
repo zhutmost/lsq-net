@@ -63,14 +63,40 @@ pre_trained: true
 #============================ Quantization =====================================
 
 quan:
-  # Bit width of quantized weight (default for all layers)
-  bit_w:
-  # Bit width of quantized activation (default for all layers)
-  bit_a:
+  act: # (default for all layers)
+    # Quantizer type (choices: lsq)
+    mode: lsq
+    # Bit width of quantized activation
+    bit: 3
+    # Each channel uses its own scaling factor
+    per_channel: false
+    # Whether to use symmetric quantization
+    symmetric: false
+    # Quantize all the numbers to non-negative
+    all_positive: true
+  weight: # (default for all layers)
+    # Quantizer type (choices: lsq)
+    mode: lsq
+    # Bit width of quantized weight
+    bit: 3
+    # Each channel uses its own scaling factor
+    per_channel: false
+    # Whether to use symmetric quantization
+    symmetric: false
+    # Whether to quantize all the numbers to non-negative
+    all_positive: false
   excepts:
     # Specify quantized bit width for some layers, like this:
-    # model.fc1:
-    #   bit_w: 8
+    conv1:
+      act:
+        all_positive: false
+      weight:
+        bit:
+    fc:
+      act:
+        bit:
+      weight:
+        bit:
 
 #============================ Training / Evaluation ============================
 
