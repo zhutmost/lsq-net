@@ -77,7 +77,6 @@ def load_checkpoint(model, chkp_file, model_device=None, strict=False, lean=Fals
 
     anomalous_keys = model.load_state_dict(checkpoint['state_dict'], strict)
     if anomalous_keys:
-        # This is pyTorch 1.1+
         missing_keys, unexpected_keys = anomalous_keys
         if unexpected_keys:
             logger.warning("The loaded checkpoint (%s) contains %d unexpected state keys" %

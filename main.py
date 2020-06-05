@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 import torch as t
+import yaml
 
 import process
 import util
@@ -17,6 +18,9 @@ def main():
 
     log_dir = util.init_logger(args.name, output_dir, 'logging.conf')
     logger = logging.getLogger()
+
+    with open(log_dir / "args.yaml", "w") as yaml_file: # dump experiment config
+        yaml.safe_dump(args, yaml_file)
 
     pymonitor = util.ProgressMonitor(logger)
     tbmonitor = util.TensorBoardMonitor(logger, log_dir)
@@ -97,6 +101,8 @@ def main():
         logger.info('>>>>>>>> Epoch -1 (final model evaluation)')
         process.validate(test_loader, model, criterion, -1, monitors, args)
 
+    logger.info('Program completed successfully ... exiting ...')
+    logger.info('If you have any questions or suggestions, please visit: github.com/zhutmost/lsq-net')
 
 if __name__ == "__main__":
     main()
