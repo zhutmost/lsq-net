@@ -1,10 +1,6 @@
-import logging
-
 import torch
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
-
-import quan
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
@@ -222,25 +218,11 @@ class ResNet(nn.Module):
         return self._forward_impl(x)
 
 
-def _resnet(arch, block, layers, pretrained, progress, quan_scheduler, **kwargs):
+def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)
-
-    replaced_modules = quan.find_modules_to_quantize(model, quan_scheduler)
-    # for name, module in replaced_modules.items():
-    #     model._modules[name] = module
-    #     if isinstance(module, nn.Conv2d):
-    #         nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
-
-    model = quan.replace_module_by_names(model, replaced_modules)
 
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
-        for name, param in model.named_parameters():
-            if name.endswith('.quan_a_fn.s'):
-                state_dict[name] = torch.ones(1)
-            elif name.endswith('.quan_w_fn.s'):
-                w_name = name[:-11] + 'weight'
-                state_dict[name] = torch.tensor([state_dict[w_name].abs().mean()])
         model.load_state_dict(state_dict)
     return model
 

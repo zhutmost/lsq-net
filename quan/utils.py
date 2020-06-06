@@ -1,6 +1,6 @@
 import logging
 
-from .lsq import *
+from .quantizer import *
 from .func import *
 
 
@@ -11,7 +11,7 @@ def quantizer(default_cfg, this_cfg=None):
             target_cfg[k] = v
 
     if target_cfg['bit'] is None:
-        q = t.nn.Identity
+        q = IdentityQuan
     elif target_cfg['mode'] == 'lsq':
         q = LsqQuan
     else:
