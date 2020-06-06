@@ -1,8 +1,22 @@
 import os
 
+import numpy as np
+from sklearn.model_selection import train_test_split
 import torch as t
 import torch.utils.data
 import torchvision as tv
+
+
+def balance_val_split(dataset, val_split=0.):
+    targets = np.array(dataset.targets)
+    train_indices, val_indices = train_test_split(
+        np.arange(targets.shape[0]),
+        test_size=val_split,
+        stratify=targets
+    )
+    train_dataset = t.utils.data.Subset(dataset, indices=train_indices)
+    val_dataset = t.utils.data.Subset(dataset, indices=val_indices)
+    return train_dataset, val_dataset
 
 
 def load_data(dataset, data_dir, batch_size, workers, val_split=0.):
@@ -25,9 +39,9 @@ def load_data(dataset, data_dir, batch_size, workers, val_split=0.):
             tv_normalize
         ])
 
-        train_folder = tv.datasets.ImageFolder(
+        train_set = tv.datasets.ImageFolder(
             root=os.path.join(data_dir, 'train'), transform=train_transform)
-        val_folder = tv.datasets.ImageFolder(
+        test_set = tv.datasets.ImageFolder(
             root=os.path.join(data_dir, 'val'), transform=val_transform)
 
     elif dataset == 'cifar10':
@@ -42,27 +56,23 @@ def load_data(dataset, data_dir, batch_size, workers, val_split=0.):
             tv_normalize
         ])
 
-        train_folder = tv.datasets.CIFAR10(data_dir, train=True, transform=train_transform, download=True)
-        val_folder = tv.datasets.CIFAR10(data_dir, train=False, transform=val_transform, download=True)
+        train_set = tv.datasets.CIFAR10(data_dir, train=True, transform=train_transform, download=True)
+        test_set = tv.datasets.CIFAR10(data_dir, train=False, transform=val_transform, download=True)
 
     else:
         raise ValueError('load_data does not support dataset %s' % dataset)
 
-    val_len = int(val_split * len(train_folder))
-    train_len = len(train_folder) - val_len
-
-    val_loader = None
     if val_split != 0:
-        train_set, val_set = t.utils.data.random_split(train_folder, [train_len, val_len])
-        val_loader = t.utils.data.DataLoader(
-            val_set, batch_size, num_workers=workers, pin_memory=True)
+        train_set, val_set = balance_val_split(train_set, val_split)
     else:
         # In this case, use the test set for validation
-        train_set = train_folder
+        val_set = test_set
 
     train_loader = t.utils.data.DataLoader(
         train_set, batch_size, shuffle=True, num_workers=workers, pin_memory=True)
+    val_loader = t.utils.data.DataLoader(
+        val_set, batch_size, num_workers=workers, pin_memory=True)
     test_loader = t.utils.data.DataLoader(
-        val_folder, batch_size, num_workers=workers, pin_memory=True)
+        test_set, batch_size, num_workers=workers, pin_memory=True)
 
-    return train_loader, val_loader or test_loader, test_loader
+    return train_loader, val_loader, test_loader

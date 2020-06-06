@@ -25,7 +25,7 @@ conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
 # Tensorboard visualization tool
 conda install tensorboard
 # Miscellaneous
-conda install pyyaml munch
+conda install scikit-learn pyyaml munch
 ```
 
 ### Run Scripts with Your Configurations
