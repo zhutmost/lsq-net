@@ -44,7 +44,10 @@ class LsqQuan(Quantizer):
             self.s = t.nn.Parameter(x.detach().abs().mean() * 2 / (self.thd_pos ** 0.5))
 
     def forward(self, x):
-        s_grad_scale = 1.0 / ((self.thd_pos * x.numel()) ** 0.5)
+        if self.per_channel:
+            s_grad_scale = 1.0 / ((self.thd_pos * x.numel() / x.shape[0]) ** 0.5)
+        else:
+            s_grad_scale = 1.0 / ((self.thd_pos * x.numel()) ** 0.5)
         s_scale = grad_scale(self.s, s_grad_scale)
 
         x = x / s_scale
