@@ -32,6 +32,8 @@ dataloader:
   num_classes: 1000
   # Path to dataset directory (currently only ImageNet supported)
   path: /localhome/fair/Dataset/imagenet
+  # Size of mini-batch
+  batch_size: 64
   # Number of data loading workers
   workers: 32
   # Seeds random generators in a deterministic way (i.e., set all the seeds 0).
@@ -107,7 +109,6 @@ quan:
 # If this field is true, all the bellowing options will be ignored
 eval: false
 
-batch_size: 64
 epochs: 90
 
 optimizer:
