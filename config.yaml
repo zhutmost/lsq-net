@@ -34,6 +34,9 @@ dataloader:
   path: /localhome/fair/Dataset/imagenet
   # Number of data loading workers
   workers: 32
+  # Seeds random generators in a deterministic way (i.e., set all the seeds 0).
+  # Please keep it true when resuming the experiment from a checkpoint
+  deterministic: true
   # Load the model without DataParallel wrapping it
   serialized: false
   # Portion of training dataset to set aside for validation (range: [0, 1))

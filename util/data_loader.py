@@ -7,7 +7,7 @@ import torch.utils.data
 import torchvision as tv
 
 
-def balance_val_split(dataset, val_split=0.):
+def __balance_val_split(dataset, val_split=0.):
     targets = np.array(dataset.targets)
     train_indices, val_indices = train_test_split(
         np.arange(targets.shape[0]),
@@ -19,13 +19,19 @@ def balance_val_split(dataset, val_split=0.):
     return train_dataset, val_dataset
 
 
-def load_data(dataset, data_dir, batch_size, workers, val_split=0.):
-    if val_split < 0 or val_split >= 1:
-        raise ValueError('val_split should be in the range of [0, 1) but got %.3f' % val_split)
+def __deterministic_worker_init_fn(worker_id, seed=0):
+    import random
+    random.seed(seed)
+    np.random.seed(seed)
+    t.manual_seed(seed)
+
+def load_data(cfg):
+    if cfg.val_split < 0 or cfg.val_split >= 1:
+        raise ValueError('val_split should be in the range of [0, 1) but got %.3f' % cfg.val_split)
 
     tv_normalize = tv.transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                            std=[0.229, 0.224, 0.225])
-    if dataset == 'imagenet':
+    if cfg.dataset == 'imagenet':
         train_transform = tv.transforms.Compose([
             tv.transforms.RandomResizedCrop(224),
             tv.transforms.RandomHorizontalFlip(),
@@ -40,11 +46,11 @@ def load_data(dataset, data_dir, batch_size, workers, val_split=0.):
         ])
 
         train_set = tv.datasets.ImageFolder(
-            root=os.path.join(data_dir, 'train'), transform=train_transform)
+            root=os.path.join(cfg.path, 'train'), transform=train_transform)
         test_set = tv.datasets.ImageFolder(
-            root=os.path.join(data_dir, 'val'), transform=val_transform)
+            root=os.path.join(cfg.path, 'val'), transform=val_transform)
 
-    elif dataset == 'cifar10':
+    elif cfg.dataset == 'cifar10':
         train_transform = tv.transforms.Compose([
             tv.transforms.RandomHorizontalFlip(),
             tv.transforms.RandomGrayscale(),
@@ -56,23 +62,27 @@ def load_data(dataset, data_dir, batch_size, workers, val_split=0.):
             tv_normalize
         ])
 
-        train_set = tv.datasets.CIFAR10(data_dir, train=True, transform=train_transform, download=True)
-        test_set = tv.datasets.CIFAR10(data_dir, train=False, transform=val_transform, download=True)
+        train_set = tv.datasets.CIFAR10(cfg.path, train=True, transform=train_transform, download=True)
+        test_set = tv.datasets.CIFAR10(cfg.path, train=False, transform=val_transform, download=True)
 
     else:
-        raise ValueError('load_data does not support dataset %s' % dataset)
+        raise ValueError('load_data does not support dataset %s' % cfg.dataset)
 
-    if val_split != 0:
-        train_set, val_set = balance_val_split(train_set, val_split)
+    if cfg.val_split != 0:
+        train_set, val_set = __balance_val_split(train_set, cfg.val_split)
     else:
         # In this case, use the test set for validation
         val_set = test_set
 
+    worker_init_fn = None
+    if cfg.deterministic:
+        worker_init_fn = __deterministic_worker_init_fn
+
     train_loader = t.utils.data.DataLoader(
-        train_set, batch_size, shuffle=True, num_workers=workers, pin_memory=True)
+        train_set, cfg.batch_size, shuffle=True, num_workers=cfg.workers, pin_memory=True, worker_init_fn=worker_init_fn)
     val_loader = t.utils.data.DataLoader(
-        val_set, batch_size, num_workers=workers, pin_memory=True)
+        val_set, cfg.batch_size, num_workers=cfg.workers, pin_memory=True, worker_init_fn=worker_init_fn)
     test_loader = t.utils.data.DataLoader(
-        test_set, batch_size, num_workers=workers, pin_memory=True)
+        test_set, cfg.batch_size, num_workers=cfg.workers, pin_memory=True, worker_init_fn=worker_init_fn)
 
     return train_loader, val_loader, test_loader

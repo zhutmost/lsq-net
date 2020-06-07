@@ -53,9 +53,7 @@ def main():
             model, args.resume.path, args.device.type, lean=args.resume.lean)
 
     # Initialize data loader
-    train_loader, val_loader, test_loader = util.load_data(
-        args.dataloader.dataset, args.dataloader.path, args.batch_size,
-        args.dataloader.workers, args.dataloader.val_split)
+    train_loader, val_loader, test_loader = util.load_data(args.dataloader)
     logger.info('Dataset `%s` size:' % args.dataloader.dataset +
                 '\n          training = %d (%d)' % (len(train_loader.sampler), len(train_loader)) +
                 '\n        validation = %d (%d)' % (len(val_loader.sampler), len(val_loader)) +
