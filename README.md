@@ -5,8 +5,6 @@
 This is an unofficial implementation of LSQ-Net, a deep neural network quantization framework.
 LSQ-Net is proposed by Steven K. Esser and et al. from IBM. It can be found on [arXiv:1902.08153](https://arxiv.org/abs/1902.08153).
 
-Due to the outbreak of coronavirus pneumonia in China, I cannot return to my laboratory for the time being, so several latest commits and experimental results have not been pushed to this repository. Currently, my implementation can obtain the same accuracy as in the original paper.
-
 There are some little differences between my implementation and the original paper, which will be described in detail below.
 
 If this repository is helpful to you, please star it.
@@ -57,27 +55,22 @@ Therefore, please handle the first layer carefully. In my case, I put it in `qua
 
 ### Initial Values of the Quantization Step Size
 
-The authors use 2<|v|>/sqrt(Qp) as initial values of the step sizes in both weight and activation quantization layers, where Qp is the upper bound of the quantization space, and v is the initial weight values or the first batch of activations.
+The authors use `Tensor(v.abs().mean() * 2 / sqrt(Qp))` as initial values of the step sizes in both weight and activation quantization layers, where Qp is the upper bound of the quantization space, and v is the initial weight values or the first batch of activations.
 
-In my implementation, the step sizes in weight quantization layers are initialized as `Tensor(v.abs().mean()/Qp)`. In activation quantization layers, the step sizes are initialized as `Tensor(1.0)`.
-
-### Optimizers and Hyper-parameters
-
-In the original paper, the network parameters are updated by a SGD optimizer with a momentum of 0.9, a weight decay of 10^-5 ~ 10^-4 and a initial learning rate of 0.01.
-A cosine learning rate decay without restarts is also performed to adjust the learning rate during training.
-
-I also use a SGD optimizer, but the weight decay is fixed to 10^-4. A step scheduler is used to decrease the learning rate 10 times every 30 epoch.
-
-All the configurable hyper-parameters can be found in the YAML configuration file.
+In my implementation, the step sizes in weight quantization layers are initialized in the same way, but in activation quantization layers, the step sizes are initialized as `Tensor(1.0)`.
 
 ### Supported Models
 
-Currently, only ResNet-18/34/50/101/152 is supported, because I do not have enough GPUs to evaluate my code on other networks. Nevertheless, it is easy to add another new architecture beside ResNet.
+Currently, only ResNet is supported.
+For the ImageNet dataset, the ResNet-18/34/50/101/152 models are copied from the torchvision model zoo. 
+For the CIFAR10 dataset, the models are modified based on [Yerlan Idelbayev's contribution](https://github.com/akamaster/pytorch_resnet_cifar10), including ResNet-20/32/44/56/110/1202.
 
-All you need is to extend the `Quantize` class in `quan/lsq.py`. With it, you can easily insert activation/weight quantization layers before matrix multiplication in your networks. Please refer to the implementation of the `QuanConv2d` class.
+Thanks to the non-invasive nature of the framework, it is easy to add another new architecture beside ResNet.
+All you need is to paste your model code into the `model` folder, and then add a corresponding entry in the `model/model.py`. 
+The quantization framework will automatically replace layers specified in `quan/func.py` with their quantized versions automatically.
 
 ## Contributing Guide
 
-I am not a professional algorithm researcher, and the current accuracy is enough for me. And I only have very limited GPU resources. Thus, I may not spend too much time continuing to optimize its results.
+I am not a professional algorithm researcher, and I only have very limited GPU resources. Thus, I may not spend too much time continuing to optimize its accuracy.
 
 However, if you find any bugs in my code or have any ideas to improve the quantization results, please feel free to open an issue. I will be glad to join the discussion.

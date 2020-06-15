@@ -30,7 +30,7 @@ dataloader:
   dataset: imagenet
   # Number of categories in the specified dataset (choices: 1000, 10)
   num_classes: 1000
-  # Path to dataset directory (currently only ImageNet supported)
+  # Path to dataset directory
   path: /localhome/fair/Dataset/imagenet
   # Size of mini-batch
   batch_size: 64
@@ -42,7 +42,7 @@ dataloader:
   # Load the model without DataParallel wrapping it
   serialized: false
   # Portion of training dataset to set aside for validation (range: [0, 1))
-  val_split: 0.0
+  val_split: 0.05
 
 resume:
   # Path to a checkpoint to be loaded. Leave blank to skip
@@ -58,8 +58,12 @@ log:
 
 #============================ Model ============================================
 
-# Model architecture (currently only ResNet supported)
-# choices: resnet18, resnet34, resnet50, resnet101, resnet152
+# Supported model architecture
+# choices:
+#   ImageNet:
+#     resnet18, resnet34, resnet50, resnet101, resnet152
+#   CIFAR10:
+#     resnet20, resnet32, resnet44, resnet56, resnet110, resnet1202
 arch: resnet18
 
 # Use pre-trained model

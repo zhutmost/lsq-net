@@ -53,7 +53,7 @@ def load_data(cfg):
     elif cfg.dataset == 'cifar10':
         train_transform = tv.transforms.Compose([
             tv.transforms.RandomHorizontalFlip(),
-            tv.transforms.RandomGrayscale(),
+            tv.transforms.RandomCrop(32, 4),
             tv.transforms.ToTensor(),
             tv_normalize
         ])
