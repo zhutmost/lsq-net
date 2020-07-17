@@ -2,9 +2,9 @@ import logging
 
 import torch as t
 
+import quan
 from .resnet import *
 from .resnet_cifar import *
-import quan
 
 
 def create_model(args):

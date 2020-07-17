@@ -1,5 +1,6 @@
 import torch as t
 
+
 class Quantizer(t.nn.Module):
     def __init__(self, bit):
         super().__init__()

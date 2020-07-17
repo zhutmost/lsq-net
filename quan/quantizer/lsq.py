@@ -39,7 +39,8 @@ class LsqQuan(Quantizer):
 
     def init_from(self, x, *args, **kwargs):
         if self.per_channel:
-            self.s = t.nn.Parameter(x.detach().abs().mean(dim=list(range(1, x.dim())), keepdim=True) * 2 / (self.thd_pos ** 0.5))
+            self.s = t.nn.Parameter(
+                x.detach().abs().mean(dim=list(range(1, x.dim())), keepdim=True) * 2 / (self.thd_pos ** 0.5))
         else:
             self.s = t.nn.Parameter(x.detach().abs().mean() * 2 / (self.thd_pos ** 0.5))
 

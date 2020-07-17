@@ -1,10 +1,10 @@
 import os
 
 import numpy as np
-from sklearn.model_selection import train_test_split
 import torch as t
 import torch.utils.data
 import torchvision as tv
+from sklearn.model_selection import train_test_split
 
 
 def __balance_val_split(dataset, val_split=0.):
@@ -24,6 +24,7 @@ def __deterministic_worker_init_fn(worker_id, seed=0):
     random.seed(seed)
     np.random.seed(seed)
     t.manual_seed(seed)
+
 
 def load_data(cfg):
     if cfg.val_split < 0 or cfg.val_split >= 1:

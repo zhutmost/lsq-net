@@ -1,7 +1,7 @@
 import logging
 
-from .quantizer import *
 from .func import *
+from .quantizer import *
 
 
 def quantizer(default_cfg, this_cfg=None):
@@ -55,5 +55,6 @@ def replace_module_by_names(model, modules_to_replace):
                         break
             else:
                 helper(c)
+
     helper(model)
     return model
