@@ -16,10 +16,10 @@ def main():
     output_dir = script_dir / args.output_dir
     output_dir.mkdir(exist_ok=True)
 
-    log_dir = util.init_logger(args.name, output_dir, 'logging.conf')
+    log_dir = util.init_logger(args.name, output_dir, script_dir / 'logging.conf')
     logger = logging.getLogger()
 
-    with open(log_dir / "args.yaml", "w") as yaml_file: # dump experiment config
+    with open(log_dir / "args.yaml", "w") as yaml_file:  # dump experiment config
         yaml.safe_dump(args, yaml_file)
 
     pymonitor = util.ProgressMonitor(logger)
@@ -101,6 +101,7 @@ def main():
 
     logger.info('Program completed successfully ... exiting ...')
     logger.info('If you have any questions or suggestions, please visit: github.com/zhutmost/lsq-net')
+
 
 if __name__ == "__main__":
     main()
