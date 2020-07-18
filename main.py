@@ -5,6 +5,7 @@ import torch as t
 import yaml
 
 import process
+import quan
 import util
 from model import create_model
 
@@ -42,22 +43,30 @@ def main():
         t.backends.cudnn.benchmark = True
         t.backends.cudnn.deterministic = False
 
-    # Create the model
-    model = create_model(args)
-
-    start_epoch = 0
-    perf_scoreboard = process.PerformanceScoreboard(args.log.num_best_scores)
-
-    if args.resume.path:
-        model, start_epoch, _ = util.load_checkpoint(
-            model, args.resume.path, args.device.type, lean=args.resume.lean)
-
     # Initialize data loader
     train_loader, val_loader, test_loader = util.load_data(args.dataloader)
     logger.info('Dataset `%s` size:' % args.dataloader.dataset +
-                '\n          training = %d (%d)' % (len(train_loader.sampler), len(train_loader)) +
-                '\n        validation = %d (%d)' % (len(val_loader.sampler), len(val_loader)) +
-                '\n              test = %d (%d)' % (len(test_loader.sampler), len(test_loader)))
+                '\n          Training Set = %d (%d)' % (len(train_loader.sampler), len(train_loader)) +
+                '\n        Validation Set = %d (%d)' % (len(val_loader.sampler), len(val_loader)) +
+                '\n              Test Set = %d (%d)' % (len(test_loader.sampler), len(test_loader)))
+
+    # Create the model
+    model = create_model(args)
+
+    modules_to_replace = quan.find_modules_to_quantize(model, args.quan)
+    model = quan.replace_module_by_names(model, modules_to_replace)
+    tbmonitor.writer.add_graph(model, input_to_model=train_loader.dataset[0][0].unsqueeze(0))
+    logger.info('Inserted quantizers into the original model')
+
+    if args.device.gpu and not args.dataloader.serialized:
+        model = t.nn.DataParallel(model, device_ids=args.device.gpu)
+
+    model.to(args.device.type)
+
+    start_epoch = 0
+    if args.resume.path:
+        model, start_epoch, _ = util.load_checkpoint(
+            model, args.resume.path, args.device.type, lean=args.resume.lean)
 
     # Define loss function (criterion) and optimizer
     criterion = t.nn.CrossEntropyLoss().to(args.device.type)
@@ -73,6 +82,8 @@ def main():
                                      **args.lr_scheduler)
     logger.info(('Optimizer: %s' % optimizer).replace('\n', '\n' + ' ' * 11))
     logger.info('LR scheduler: %s\n' % lr_scheduler)
+
+    perf_scoreboard = process.PerformanceScoreboard(args.log.num_best_scores)
 
     if args.eval:
         process.validate(test_loader, model, criterion, -1, monitors, args)
@@ -99,6 +110,7 @@ def main():
         logger.info('>>>>>>>> Epoch -1 (final model evaluation)')
         process.validate(test_loader, model, criterion, -1, monitors, args)
 
+    tbmonitor.writer.close()  # close the TensorBoard
     logger.info('Program completed successfully ... exiting ...')
     logger.info('If you have any questions or suggestions, please visit: github.com/zhutmost/lsq-net')
 

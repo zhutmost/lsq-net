@@ -1,8 +1,5 @@
 import logging
 
-import torch as t
-
-import quan
 from .resnet import *
 from .resnet_cifar import *
 
@@ -44,11 +41,4 @@ def create_model(args):
     msg += '\n          Use pre-trained model = %s' % args.pre_trained
     logger.info(msg)
 
-    replaced_modules = quan.find_modules_to_quantize(model, args.quan)
-    model = quan.replace_module_by_names(model, replaced_modules)
-    logger.info('Inserted quantizers into the original model')
-
-    if args.device.gpu and not args.dataloader.serialized:
-        model = t.nn.DataParallel(model, device_ids=args.device.gpu)
-
-    return model.to(args.device.type)
+    return model

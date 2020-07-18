@@ -41,7 +41,7 @@ class Monitor:
 
 class ProgressMonitor(Monitor):
     def __init__(self, logger):
-        super(ProgressMonitor, self).__init__()
+        super().__init__()
         self.logger = logger
 
     def update(self, epoch, step_idx, step_num, prefix, meter_dict):
@@ -62,7 +62,7 @@ class ProgressMonitor(Monitor):
 
 class TensorBoardMonitor(Monitor):
     def __init__(self, logger, log_dir):
-        super(TensorBoardMonitor, self).__init__()
+        super().__init__()
         self.writer = SummaryWriter(log_dir / 'tb_runs')
         logger.info('TensorBoard data directory: %s/tb_runs' % log_dir)
 
