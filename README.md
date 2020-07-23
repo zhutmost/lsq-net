@@ -9,6 +9,17 @@ There are some little differences between my implementation and the original pap
 
 If this repository is helpful to you, please star it.
 
+## Results and Models
+
+Here are some experiment results.
+We will release more quantized models with different configurations soon. 
+
+All these models can be downloaded from [Dropbox](https://www.dropbox.com/sh/un1k74qael1k6mx/AADroPMhvCrd1szG6HUYO_N3a?dl=0).
+
+| Network   | Config. File | Model | Bitwidth (W/A) | Top-1 Acc. (%) | Top-5 Acc. (%) |
+|:---------:|:--------:|:-------------:|:---------------:|:--------------:|:--------------:|
+| ResNet-18 | [link](examples/lsq/resnet18_a2w3_imagenet.yaml) | [link](https://www.dropbox.com/sh/a5spn8boovfhjrj/AAD-Ureq7DpMKOujPdH4l0jVa?dl=0) |            3/2 |           66.9 |           87.2 |
+
 ## User Guide
 
 ### Install Dependencies
@@ -36,9 +47,9 @@ If you want to change the behaviour of this program, please copy it somewhere el
 python main.py /path/to/your/config/file.yaml
 ```
 
-The modified options in your YAML file will overwrite the default settings. For details, please read the comments in `config.yaml`.
+The modified options in your YAML file will overwrite the default settings. For details, please read the comments in `config.yaml`. After every epoch, the program will automatically store the best model parameters as a checkpoint. You can modify the option `resume.path: /path/to/checkpoint.pth.tar` in the YAML file to resume the training process, or evaluate the accuracy of the quantized model.
 
-After every epoch, the program will automatically store the best model parameters as a checkpoint. You can modify the option `resume.path: /path/to/checkpoint.pth.tar` in the YAML file to resume the training process, or evaluate the accuracy of the quantized model.
+You can find some example configuration files in the [example](examples) folder.
 
 ## Implementation Differences From the Original Paper
 
@@ -47,11 +58,6 @@ To improve accuracy, the authors expanded the quantization space in the v2 versi
 Recently they released a new version [v3](https://arxiv.org/pdf/1902.08153v3.pdf), which fixed some typos in the v2 version.
 
 My implementation generally follows the v2 version, except for the following points.
-
-### Quantization of the First and Last Layers
-
-The authors quantize the first convolution layer and the last fully-connected layer to 8-bit fixed-point numbers. However, their description is not clear. Due to the normalization in the input image preprocessing stage, the input of the first layer may be negative, so it cannot be applied to the activation quantizer in the original paper.
-Therefore, please handle the first layer carefully. In my case, I put it in `quan.excepts` to avoid quantization.
 
 ### Initial Values of the Quantization Step Size
 
@@ -65,7 +71,7 @@ Currently, only ResNet is supported.
 For the ImageNet dataset, the ResNet-18/34/50/101/152 models are copied from the torchvision model zoo. 
 For the CIFAR10 dataset, the models are modified based on [Yerlan Idelbayev's contribution](https://github.com/akamaster/pytorch_resnet_cifar10), including ResNet-20/32/44/56/110/1202.
 
-Thanks to the non-invasive nature of the framework, it is easy to add another new architecture beside ResNet.
+Thanks to the non-invasive nature of the framework, it is easy to add another new architectures beside ResNet.
 All you need is to paste your model code into the `model` folder, and then add a corresponding entry in the `model/model.py`. 
 The quantization framework will automatically replace layers specified in `quan/func.py` with their quantized versions automatically.
 
