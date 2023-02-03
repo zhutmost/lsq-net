@@ -1,6 +1,9 @@
 # ==============================================================================
 #                               Editors & IDEs
 
+# vscode
+.vscode/
+
 # gedit: backup files
 *~
 
@@ -48,7 +51,7 @@ Thumbs.db
 
 # Working directory
 out/
-
+Dataset/
 # SVN
 .svn/
 
