@@ -16,13 +16,14 @@ class QuanConv2d(t.nn.Conv2d):
 
         self.weight = t.nn.Parameter(m.weight.detach())
         self.quan_w_fn.init_from(m.weight)
+        self.bias = None
         if m.bias is not None:
             self.bias = t.nn.Parameter(m.bias.detach())
-
+        
     def forward(self, x):
         quantized_weight = self.quan_w_fn(self.weight)
         quantized_act = self.quan_a_fn(x)
-        return self._conv_forward(quantized_act, quantized_weight)
+        return self._conv_forward(quantized_act, quantized_weight, self.bias)
 
 
 class QuanLinear(t.nn.Linear):
