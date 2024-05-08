@@ -12,13 +12,13 @@ If this repository is helpful to you, please star it.
 ## Results and Models
 
 Here are some experiment results.
-We will release more quantized models with different configurations soon.
+We will release more quantized models with different configurations soon. 
 
 All these models can be downloaded from [Dropbox](https://www.dropbox.com/sh/un1k74qael1k6mx/AADroPMhvCrd1szG6HUYO_N3a?dl=0).
 
-|  Network  |                 Config. File                 |                                     Model                                     | Bitwidth (W/A) | Top-1 Acc. (%) | Top-5 Acc. (%) |
-| :-------: | :-------------------------------------------: | :----------------------------------------------------------------------------: | :------------: | :------------: | :------------: |
-| ResNet-18 | [link](examples/lsq/resnet18_a2w3_imagenet.yaml) | [link](https://www.dropbox.com/sh/a5spn8boovfhjrj/AAD-Ureq7DpMKOujPdH4l0jVa?dl=0) |      3/2      |      66.9      |      87.2      |
+| Network   | Config. File | Model | Bitwidth (W/A) | Top-1 Acc. (%) | Top-5 Acc. (%) |
+|:---------:|:--------:|:-------------:|:---------------:|:--------------:|:--------------:|
+| ResNet-18 | [link](examples/lsq/resnet18_a2w3_imagenet.yaml) | [link](https://www.dropbox.com/sh/a5spn8boovfhjrj/AAD-Ureq7DpMKOujPdH4l0jVa?dl=0) |            3/2 |           66.9 |           87.2 |
 
 ## User Guide
 
@@ -54,7 +54,7 @@ You can find some example configuration files in the [example](examples) folder.
 ## Implementation Differences From the Original Paper
 
 LSQ-Net paper has two versions, [v1](https://arxiv.org/pdf/1902.08153v2.pdf) and [v2](https://arxiv.org/pdf/1902.08153v1.pdf).
-To improve accuracy, the authors expanded the quantization space in the v2 version.
+To improve accuracy, the authors expanded the quantization space in the v2 version. 
 Recently they released a new version [v3](https://arxiv.org/pdf/1902.08153v3.pdf), which fixed some typos in the v2 version.
 
 My implementation generally follows the v2 version, except for the following points.
@@ -68,11 +68,11 @@ In my implementation, the step sizes in weight quantization layers are initializ
 ### Supported Models
 
 Currently, only ResNet is supported.
-For the ImageNet dataset, the ResNet-18/34/50/101/152 models are copied from the torchvision model zoo.
-For the CIFAR10 dataset, the models are modified based on [Yerlan Idelbayev&#39;s contribution](https://github.com/akamaster/pytorch_resnet_cifar10), including ResNet-20/32/44/56/110/1202.
+For the ImageNet dataset, the ResNet-18/34/50/101/152 models are copied from the torchvision model zoo. 
+For the CIFAR10 dataset, the models are modified based on [Yerlan Idelbayev's contribution](https://github.com/akamaster/pytorch_resnet_cifar10), including ResNet-20/32/44/56/110/1202.
 
 Thanks to the non-invasive nature of the framework, it is easy to add another new architectures beside ResNet.
-All you need is to paste your model code into the `model` folder, and then add a corresponding entry in the `model/model.py`.
+All you need is to paste your model code into the `model` folder, and then add a corresponding entry in the `model/model.py`. 
 The quantization framework will automatically replace layers specified in `quan/func.py` with their quantized versions automatically.
 
 ## Contributing Guide
@@ -80,18 +80,3 @@ The quantization framework will automatically replace layers specified in `quan/
 I am not a professional algorithm researcher, and I only have very limited GPU resources. Thus, I may not spend too much time continuing to optimize its accuracy.
 
 However, if you find any bugs in my code or have any ideas to improve the quantization results, please feel free to open an issue. I will be glad to join the discussion.
-
-# run code建议
-
-* kernel size改成tuple，直接把原先的一个值改成两个就行（正方形）
-* python要3.8版本，3.6会报地址的语法错误
-* gpu还没跑动，不知道哪个版本可以跑cuda
-  * 发现用官网的conda指令下11.3就会变成cpu
-  * 用pip下载成功
-* scripy报错的话，把conda的scripy卸载，用pip下载
-
-
-代码总体流程
-
-* 将原始模型用量化后的层替代
-* 对替代后的模型进行训练

@@ -20,23 +20,22 @@ output_dir: out
 # Device to be used
 device:
   # Use CPU or GPU (choices: cpu, cuda)
-  #type: cpu
   type: cuda
   # GPU device IDs to be used. Only valid when device.type is 'cuda'
-  gpu: [0]
+  gpu: [0, 1]
 
 # Dataset loader
 dataloader:
   # Dataset to train/validate (choices: imagenet, cifar10)
-  dataset: cifar10
+  dataset: imagenet
   # Number of categories in the specified dataset (choices: 1000, 10)
-  num_classes: 10
+  num_classes: 1000
   # Path to dataset directory
-  path: ./Dataset/cifar10
+  path: /localhome/fair/Dataset/imagenet
   # Size of mini-batch
   batch_size: 64
   # Number of data loading workers
-  workers: 4
+  workers: 32
   # Seeds random generators in a deterministic way (i.e., set all the seeds 0).
   # Please keep it true when resuming the experiment from a checkpoint
   deterministic: true
@@ -65,7 +64,7 @@ log:
 #     resnet18, resnet34, resnet50, resnet101, resnet152
 #   CIFAR10:
 #     resnet20, resnet32, resnet44, resnet56, resnet110, resnet1202
-arch: resnet20
+arch: resnet18
 
 # Use pre-trained model
 pre_trained: true
