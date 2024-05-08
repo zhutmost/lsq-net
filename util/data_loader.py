@@ -12,8 +12,7 @@ def __balance_val_split(dataset, val_split=0.):
     train_indices, val_indices = train_test_split(
         np.arange(targets.shape[0]),
         test_size=val_split,
-        stratify=targets,
-        random_state = 0
+        stratify=targets
     )
     train_dataset = t.utils.data.Subset(dataset, indices=train_indices)
     val_dataset = t.utils.data.Subset(dataset, indices=val_indices)

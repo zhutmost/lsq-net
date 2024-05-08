@@ -116,7 +116,7 @@ class ExponentialLr(LrScheduler):
             epoch = epoch + batch * self.batch_size / self.num_samples
         for i in range(self.num_groups):
             self.current_lr[i] = self.base_lr[i] * (self.gamma ** epoch)
-        self.set_lr(self.current_lr)
+
 
 class CosineLr(LrScheduler):
     def __init__(self, lr_min=0., cycle=90, **kwargs):
